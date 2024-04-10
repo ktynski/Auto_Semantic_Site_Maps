@@ -4,3 +4,4 @@ langchain
 networkx
 python-louvain
 futures
+scipy
