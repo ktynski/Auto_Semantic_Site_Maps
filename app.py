@@ -7,7 +7,7 @@ import os
 import networkx as nx
 from community import community_louvain
 import anthropic
-from typing import Dict Set
+from typing import Dict, Set
 
 
 # Set up Anthropic API key
