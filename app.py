@@ -459,58 +459,63 @@ def main():
             if G.nodes[node]['label'].startswith('Pillar:'):
                 personalized_pagerank[node] = nx.pagerank(G, personalization={node: 1})
 
-        # Create a DataFrame to store the results
-        results_df = pd.DataFrame(columns=['Node', 'Label', 'PageRank', 'Betweenness Centrality', 'Closeness Centrality',
-                                           'Eigenvector Centrality', 'Community', 'Personalized PageRank'])
+       # Create a DataFrame to store the results
+    results_df = pd.DataFrame(columns=['Node', 'Label', 'PageRank', 'Betweenness Centrality', 'Closeness Centrality',
+                                       'Eigenvector Centrality', 'Community', 'Personalized PageRank'])
 
-        # Populate the DataFrame with the results
-        for node in G.nodes():
-            node_label = G.nodes[node]['label']
-            community = partition[node]
-            personalized_scores = {pillar: scores[node] for pillar, scores in personalized_pagerank.items()}
-            new_row = pd.DataFrame({
-                'Node': [node],
-                'Label': [node_label],
-                'PageRank': [pagerank[node]],
-                'Betweenness Centrality': [betweenness_centrality[node]],
-                'Closeness Centrality': [closeness_centrality[node]],
-                'Eigenvector Centrality': [eigenvector_centrality[node]],
-                'Community': [community],
-                'Personalized PageRank': [personalized_scores]
-            })
-            results_df = pd.concat([results_df, new_row], ignore_index=True)
+    # Populate the DataFrame with the results
+    for node in G.nodes():
+        node_label = G.nodes[node]['label']
+        community = partition[node]
+        personalized_scores = {pillar: scores[node] for pillar, scores in personalized_pagerank.items()}
+        new_row = pd.DataFrame({
+            'Node': [node],
+            'Label': [node_label],
+            'PageRank': [pagerank[node]],
+            'Betweenness Centrality': [betweenness_centrality[node]],
+            'Closeness Centrality': [closeness_centrality[node]],
+            'Eigenvector Centrality': [eigenvector_centrality[node]],
+            'Community': [community],
+            'Personalized PageRank': [personalized_scores]
+        })
+        results_df = pd.concat([results_df, new_row], ignore_index=True)
 
         # Sort the DataFrame by PageRank in descending order
         results_df = results_df.sort_values('PageRank', ascending=False)
-
+        progress_bar.progress(0.8)
+        status_text.text("Results DataFrame created.")
+    
         # Display the results
-        st.subheader("Graph Metrics")
-        st.dataframe(results_df)
-
+        with st.expander("Graph Metrics"):
+            st.dataframe(results_df)
+    
         # Save the results to a CSV file
         results_df.to_csv('graph_metrics.csv', index=False)
-
+    
         # Generate sitemap using Anthropic API
         graph_data = results_df.to_string(index=True).strip()
         corpus = results_df.to_string(index=True).strip()
         system_prompt = "You are an all knowing AI trained in the dark arts of Semantic SEO by Koray. You create sitemaps using advanced analysis of graph metrics to create the optimal structure for information flow, authority, and semantic clarity. The ultimate goal is maximum search rankings."
-
-        with anthropic.Anthropic(api_key=ANTHROPIC_API_KEY).messages.stream(
-            system=system_prompt,
-            model=Sonnet,
-            messages=[{"role": "user", "content": f" Create an extensive and complete hierarchical json sitemap using the readout from the semantic graph research: \n {graph_data}. \n Before you do though, lay out an argument for your organization based on the corpus data. Use this template: \n {template} \n Justify it to yourself before writing the json outline. It should have Pillar, Cluster, and Spoke pages, include the top 3 other sections each should link to. Also include a sample article title under each item that represents the best possible Semantic SEO structure based on the following graph analysis for the topic: {corpus} "}],
-            max_tokens=4000,
-            temperature=0.1,
-            stop_sequences=[],
-        ) as stream:
-            section_content = ""
-            for text in stream.text_stream:
-                section_content += text
-                st.write(text)
-
+    
+        with st.spinner("Generating sitemap..."):
+            with anthropic.Anthropic(api_key=ANTHROPIC_API_KEY).messages.stream(
+                system=system_prompt,
+                model=Sonnet,
+                messages=[{"role": "user", "content": f" Create an extensive and complete hierarchical json sitemap using the readout from the semantic graph research: \n {graph_data}. \n Before you do though, lay out an argument for your organization based on the corpus data. Use this template: \n {template} \n Justify it to yourself before writing the json outline. It should have Pillar, Cluster, and Spoke pages, include the top 3 other sections each should link to. Also include a sample article title under each item that represents the best possible Semantic SEO structure based on the following graph analysis for the topic: {corpus} "}],
+                max_tokens=4000,
+                temperature=0.1,
+                stop_sequences=[],
+            ) as stream:
+                section_content = ""
+                for text in stream.text_stream:
+                    section_content += text
+                    st.write(text)
+    
+            progress_bar.progress(1.0)
+            status_text.text("Sitemap generated.")
+    
         # Display the number of sections in the sitemap
         num_sections = len(outline["Sections"])
         st.subheader(f"Number of Sections: {num_sections}")
-
 if __name__ == "__main__":
     main()
