@@ -373,7 +373,7 @@ class SemanticMapGenerator:
             relationships.update(new_relationships)
             progress_placeholder.write(f"Total relationships: {len(relationships)}")
 
-    return {"entities": entities, "relationships": relationships}
+        return {"entities": entities, "relationships": relationships}
 
 
 def save_semantic_map_to_csv(semantic_map: Dict[str, Set], topic: str):
