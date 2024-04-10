@@ -3,3 +3,4 @@ langchain_anthropic
 langchain 
 networkx
 python-louvain
+futures
