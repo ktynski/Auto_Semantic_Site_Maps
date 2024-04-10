@@ -397,7 +397,7 @@ def main():
         system_prompt = "You are an all knowing AI trained in the dark arts of Semantic SEO by Koray. You create sitemaps using advanced analysis of graph metrics to create the optimal structure for information flow, authority, and semantic clarity. The ultimate goal is maximum search rankings."
 
         with st.spinner("Generating sitemap..."):
-            sitemap_stream = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY).messages.stream(
+            sitemap_stream = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY).messages.stream_response(
                 system=system_prompt,
                 model=Sonnet,
                 messages=[{"role": "user", "content": f" Create an extensive and complete hierarchical json sitemap using the readout from the semantic graph research: \n {graph_data}. \n Before you do though, lay out an argument for your organization based on the corpus data. Use this template: \n {template} \n Justify it to yourself before writing the json outline. It should have Pillar, Cluster, and Spoke pages, include the top 3 other sections each should link to. Also include a sample article title under each item that represents the best possible Semantic SEO structure based on the following graph analysis for the topic: {corpus} "}],
@@ -407,8 +407,10 @@ def main():
             )
 
             sitemap_text = st.empty()
-            for text in sitemap_stream.text_stream:
-                sitemap_text.write(text)
+            for chunk in sitemap_stream:
+                if chunk.get("finish_reason") == "stop":
+                    break
+                sitemap_text.write(chunk["completion"])
 
             progress_bar.progress(1.0)
             status_text.text("Sitemap generated.")
