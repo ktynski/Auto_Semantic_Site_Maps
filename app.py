@@ -344,34 +344,34 @@ class SemanticMapGenerator:
         self.relationship_generator = relationship_generator
 
     def generate_semantic_map(self, topic: str, num_iterations: int, num_parallel_runs: int, num_entities_per_run: int, temperature: float, relationship_batch_size: int) -> Dict[str, Set]:
-    entities = {}
-    relationships = set()
-    total_iterations = num_iterations * num_parallel_runs
-    completed_iterations = 0
-
-    for iteration in range(num_iterations):
-        # Parallel entity generation
-        with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
-            futures = []
-            for _ in range(num_parallel_runs):
-                future = executor.submit(self.entity_generator.generate_entities, topic, entities, num_entities_per_run, temperature)
-                futures.append(future)
-            new_entities = {}
-            for future in concurrent.futures.as_completed(futures):
-                new_entities.update(future.result())
-                completed_iterations += 1
-                progress = completed_iterations / total_iterations
-                progress_placeholder.progress(progress)
-                progress_placeholder.write(f"Iteration {completed_iterations}/{total_iterations}: Generating entities...")
-
-        # Deduplicate entities
-        entities.update(new_entities)
-        progress_placeholder.write(f"Total entities: {len(entities)}")
-
-        # Parallel relationship generation
-        new_relationships = self.relationship_generator.generate_relationships(topic, entities, relationships, relationship_batch_size, num_parallel_runs)
-        relationships.update(new_relationships)
-        progress_placeholder.write(f"Total relationships: {len(relationships)}")
+        entities = {}
+        relationships = set()
+        total_iterations = num_iterations * num_parallel_runs
+        completed_iterations = 0
+    
+        for iteration in range(num_iterations):
+            # Parallel entity generation
+            with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+                futures = []
+                for _ in range(num_parallel_runs):
+                    future = executor.submit(self.entity_generator.generate_entities, topic, entities, num_entities_per_run, temperature)
+                    futures.append(future)
+                new_entities = {}
+                for future in concurrent.futures.as_completed(futures):
+                    new_entities.update(future.result())
+                    completed_iterations += 1
+                    progress = completed_iterations / total_iterations
+                    progress_placeholder.progress(progress)
+                    progress_placeholder.write(f"Iteration {completed_iterations}/{total_iterations}: Generating entities...")
+    
+            # Deduplicate entities
+            entities.update(new_entities)
+            progress_placeholder.write(f"Total entities: {len(entities)}")
+    
+            # Parallel relationship generation
+            new_relationships = self.relationship_generator.generate_relationships(topic, entities, relationships, relationship_batch_size, num_parallel_runs)
+            relationships.update(new_relationships)
+            progress_placeholder.write(f"Total relationships: {len(relationships)}")
 
     return {"entities": entities, "relationships": relationships}
 
