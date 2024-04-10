@@ -399,15 +399,19 @@ def main():
 
         with st.spinner("Generating sitemap..."):
             def sitemap_stream():
-                for data in anthropic.Anthropic(api_key=ANTHROPIC_API_KEY).completion_stream(
-                    prompt=f"{system_prompt}\n\nCreate an extensive and complete hierarchical json sitemap using the readout from the semantic graph research: \n {graph_data}. \n Before you do though, lay out an argument for your organization based on the corpus data. Use this template: \n {template} \n Justify it to yourself before writing the json outline. It should have Pillar, Cluster, and Spoke pages, include the top 3 other sections each should link to. Also include a sample article title under each item that represents the best possible Semantic SEO structure based on the following graph analysis for the topic: {corpus}",
+                with anthropic.Anthropic(api_key=ANTHROPIC_API_KEY).messages.stream(
                     model=Sonnet,
+                    messages=[
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": f"Create an extensive and complete hierarchical json sitemap using the readout from the semantic graph research: \n {graph_data}. \n Before you do though, lay out an argument for your organization based on the corpus data. Use this template: \n {template} \n Justify it to yourself before writing the json outline. It should have Pillar, Cluster, and Spoke pages, include the top 3 other sections each should link to. Also include a sample article title under each item that represents the best possible Semantic SEO structure based on the following graph analysis for the topic: {corpus}"}
+                    ],
                     max_tokens=4000,
                     temperature=0.1,
                     stop_sequences=[],
-                ):
-                    completion = data.completion
-                    yield completion
+                ) as stream:
+                    for event in stream:
+                        if event.event_type == "content_block_delta":
+                            yield event.data.delta.text
 
             sitemap_response = st.write_stream(sitemap_stream())
 
