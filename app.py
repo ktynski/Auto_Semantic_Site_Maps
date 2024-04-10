@@ -402,8 +402,7 @@ def main():
                 with anthropic.Anthropic(api_key=ANTHROPIC_API_KEY).messages.stream(
                     model=Sonnet,
                     messages=[
-                        {"role": "system", "content": system_prompt},
-                        {"role": "user", "content": f"Create an extensive and complete hierarchical json sitemap using the readout from the semantic graph research: \n {graph_data}. \n Before you do though, lay out an argument for your organization based on the corpus data. Use this template: \n {template} \n Justify it to yourself before writing the json outline. It should have Pillar, Cluster, and Spoke pages, include the top 3 other sections each should link to. Also include a sample article title under each item that represents the best possible Semantic SEO structure based on the following graph analysis for the topic: {corpus}"}
+                        {"role": "user", "content": f"{system_prompt} \n Create an extensive and complete hierarchical json sitemap using the readout from the semantic graph research: \n {graph_data}. \n Before you do though, lay out an argument for your organization based on the corpus data. Use this template: \n {template} \n Justify it to yourself before writing the json outline. It should have Pillar, Cluster, and Spoke pages, include the top 3 other sections each should link to. Also include a sample article title under each item that represents the best possible Semantic SEO structure based on the following graph analysis for the topic: {corpus}"}
                     ],
                     max_tokens=4000,
                     temperature=0.1,
