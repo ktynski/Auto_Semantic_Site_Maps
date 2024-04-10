@@ -356,7 +356,6 @@ def main():
 
         # Generate sitemap using Anthropic API
         graph_data = results_df.to_string(index=True).strip()
-        ANTHROPIC_API_KEY = userdata.get('ANTHROPIC_API_KEY')
         corpus = results_df.to_string(index=True).strip()
         system_prompt = "You are an all knowing AI trained in the dark arts of Semantic SEO by Koray. You create sitemaps using advanced analysis of graph metrics to create the optimal structure for information flow, authority, and semantic clarity. The ultimate goal is maximum search rankings."
 
