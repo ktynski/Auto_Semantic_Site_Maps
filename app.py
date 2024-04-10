@@ -7,7 +7,7 @@ import os
 import networkx as nx
 from community import community_louvain
 import anthropic
-from google.colab import userdata
+
 
 # Set up Anthropic API key
 ANTHROPIC_API_KEY = st.secrets('ANTHROPIC_API_KEY')
