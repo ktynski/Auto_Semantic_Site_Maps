@@ -9,6 +9,8 @@ from community import community_louvain
 import anthropic
 from typing import Dict, Set
 import concurrent.futures
+import scipy
+
 
 # Set up Anthropic API key
 ANTHROPIC_API_KEY = st.secrets["ANTHROPIC_API_KEY"]
