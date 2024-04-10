@@ -10,8 +10,8 @@ import anthropic
 
 
 # Set up Anthropic API key
-ANTHROPIC_API_KEY = st.secrets("ANTHROPIC_API_KEY")
-
+anthropic.ANTHROPIC_API_KEY = st.secrets("ANTHROPIC_API_KEY")
+ANTHROPIC_API_KEY = anthropic.ANTHROPIC_API_KEY 
 
 # Define models
 Opus = "claude-3-opus-20240229"
