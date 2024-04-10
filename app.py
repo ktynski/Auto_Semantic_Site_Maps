@@ -408,7 +408,7 @@ def main():
                 section_content = ""
                 for text in stream.text_stream:
                     section_content += text
-                    st.write(text)
+                    st.code(text)
 
             progress_bar.progress(1.0)
             status_text.text("Sitemap generated.")
