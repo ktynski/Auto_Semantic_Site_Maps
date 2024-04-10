@@ -394,7 +394,8 @@ def main():
         # Generate sitemap using Anthropic API
         graph_data = results_df.to_string(index=True).strip()
         corpus = results_df.to_string(index=True).strip()
-        system_prompt = "You are an all knowing AI trained in the dark arts of Semantic SEO by Koray. You create sitemaps using advanced analysis of graph metrics to create the optimal structure for information flow, autho
+        system_prompt = "You are an all knowing AI trained in the dark arts of Semantic SEO by Koray. You create sitemaps using advanced analysis of graph metrics to create the optimal structure for information flow, authority, and semantic clarity. The ultimate goal is maximum search rankings."
+
         with st.spinner("Generating sitemap..."):
             sitemap_stream = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY).messages.stream(
                 system=system_prompt,
@@ -402,7 +403,8 @@ def main():
                 messages=[{"role": "user", "content": f" Create an extensive and complete hierarchical json sitemap using the readout from the semantic graph research: \n {graph_data}. \n Before you do though, lay out an argument for your organization based on the corpus data. Use this template: \n {template} \n Justify it to yourself before writing the json outline. It should have Pillar, Cluster, and Spoke pages, include the top 3 other sections each should link to. Also include a sample article title under each item that represents the best possible Semantic SEO structure based on the following graph analysis for the topic: {corpus} "}],
                 max_tokens=4000,
                 temperature=0.1,
-                sto            )
+                stop_sequences=[],
+            )
 
             sitemap_text = st.empty()
             for text in sitemap_stream.text_stream:
@@ -411,7 +413,8 @@ def main():
             progress_bar.progress(1.0)
             status_text.text("Sitemap generated.")
 
-        #        num_sections = len(outline["Sections"])
+        # Display the number of sections in the sitemap
+        num_sections = len(outline["Sections"])
         st.subheader(f"Number of Sections: {num_sections}")
 
 if __name__ == "__main__":
