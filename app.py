@@ -418,9 +418,9 @@ def main():
                     return sitemap_content
 
             sitemap_response = st.write_stream(sitemap_stream())
-
             progress_bar.progress(1.0)
             status_text.text("Sitemap generated.")
+        st.code(sitemap_response)
 
         # Display the number of sections in the sitemap
         try:
