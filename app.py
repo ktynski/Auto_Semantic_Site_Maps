@@ -299,7 +299,7 @@ def save_semantic_map_to_csv(semantic_map: Dict[str, Set], topic: str):
 # Streamlit app
 def main():
     st.set_page_config(page_title="Generating Semantically Complete Sitemaps with Large Language Models and Graph Analysis", layout="wide")
-    st.title("Semantically Complete SiteMaps with Large Language Models and Graph Analysis")
+    st.title("Semantically Complete SiteMaps with LLMs and Graph Analysis")
     description = """
     ## What is this and How Does it Work?
 
