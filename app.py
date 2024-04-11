@@ -19,8 +19,6 @@ Opus = "claude-3-opus-20240229"
 Sonnet = "claude-3-sonnet-20240229"
 Haiku = "claude-3-haiku-20240307"
 
-# Initialize LLM
-llm = ChatAnthropic(temperature=0.2, model_name=model_name, max_tokens=4000)
 
 template = {
     "Pillars": [
@@ -323,7 +321,9 @@ def main():
     temperature = st.sidebar.slider("Temperature", min_value=0.0, max_value=1.0, value=0.7, step=0.1)
     relationship_batch_size = st.sidebar.number_input("Relationship Batch Size", min_value=1, max_value=20, value=10)
     model_name = st.sidebar.selectbox("Claude Model", [Opus, Sonnet, Haiku], index=2)
+    # Initialize LLM
     llm = ChatAnthropic(temperature=0.2, model_name=model_name, max_tokens=4000)
+
     if st.sidebar.button("Generate Semantic Map"):
         if not api_key:
             st.error("Please enter a valid Anthropic API key.")
