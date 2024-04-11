@@ -20,7 +20,7 @@ Sonnet = "claude-3-sonnet-20240229"
 Haiku = "claude-3-haiku-20240307"
 
 # Initialize LLM
-llm = ChatAnthropic(temperature=0.2, model_name=model_name, max_tokens=4000, anthropic_api_key=api_key)
+llm = ChatAnthropic(temperature=0.2, model_name=model_name, max_tokens=4000)
 
 template = {
     "Pillars": [
