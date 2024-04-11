@@ -314,7 +314,7 @@ def main():
     # Sidebar
     st.sidebar.title("Settings")
     topic = st.sidebar.text_input("Topic", value="Enter Your Topic Here")
-    api_key = st.sidebar.text_input("Anthropic API Key", type="password")
+    ANTHROPIC_API_KEY = st.sidebar.text_input("Anthropic API Key", type="password")
     num_iterations = st.sidebar.number_input("Number of Iterations", min_value=1, max_value=5, value=1)
     num_parallel_runs = st.sidebar.number_input("Number of Parallel Runs", min_value=1, max_value=10, value=5)
     num_entities_per_run = st.sidebar.number_input("Number of Entities per Run", min_value=1, max_value=20, value=10)
@@ -325,7 +325,7 @@ def main():
     llm = ChatAnthropic(temperature=0.2, model_name=model_name, max_tokens=4000)
 
     if st.sidebar.button("Generate Semantic Map"):
-        if not api_key:
+        if not ANTHROPIC_API_KEY:
             st.error("Please enter a valid Anthropic API key.")
         else:
             progress_bar = st.progress(0)
@@ -434,7 +434,7 @@ def main():
         corpus = results_df.to_string(index=True).strip()
         system_prompt = "You are an all knowing AI trained in the dark arts of Semantic SEO by Koray. You create sitemaps using advanced analysis of graph metrics to create the optimal structure for information flow, authority, and semantic clarity. The ultimate goal is maximum search rankings."
         with st.spinner("Generating sitemap..."):
-            sitemap_response = anthropic.Anthropic(api_key=api_key).messages.create(
+            sitemap_response = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY).messages.create(
                 system = system_prompt,
                 messages = [{"role": "user", "content": f"Create an extensive and complete hierarchical json sitemap using the readout from the semantic graph research: \n {graph_data}. \n Before you do though, lay out an argument for your organization based on the corpus data. Use this template: \n {template} \n Justify it to yourself before writing the json outline. It should have Pillar, Cluster, and Spoke pages, include the top 3 other sections each should link to. Also include a sample article title under each item that represents the best possible Semantic SEO structure based on the following graph analysis for the topic: {corpus}"}],
                 model=model_name,
@@ -448,7 +448,7 @@ def main():
         st.code(sitemap_json, language="json")
         # Generate additional commentary and recommendations using Anthropic API
         with st.spinner("Generating additional commentary and recommendations..."):
-            commentary_response = anthropic.Anthropic(api_key=api_key).messages.create(
+            commentary_response = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY).messages.create(
                 system = system_prompt,
                 messages = [{"role": "user", "content": f"Based on the generated semantic sitemap and graph analysis, provide a few paragraphs of additional commentary and concrete recommendations for optimizing the website structure and content for semantic SEO. Consider factors such as internal linking, content depth and breadth, and user experience. Here is the graph you generated: {sitemap_json} and the underlying graph data research: {graph_data}"}],
                 model=model_name,
@@ -476,7 +476,7 @@ def main():
                 }}
                 ```
                 DO NOT return any commentary, preamble, postamble, or meta commentary on the task or its completion. Return ONLY the digraph. Your response should start with digraph and then a bracket."""
-            mermaid_response = anthropic.Anthropic(api_key=api_key).messages.create(
+            mermaid_response = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY).messages.create(
                 messages=[{"role": "user", "content": f"{mermaid_prompt}"}],
                 model=model_name,
                 max_tokens=4000,
