@@ -481,7 +481,7 @@ def main():
                 ```
                 DO NOT return any commentary, preamble, postamble, or meta commentary on the task or its completion. Return ONLY the digraph. Your response should start with digraph and then a bracket."""
             mermaid_response = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY).messages.create(
-                system = "You are an AI that ouputs digraph charts in a specific format without any other text, preamble, postamble or meta commentary. You do this accurately every time. Failing results in me losing my job.
+                system = "You are an AI that ouputs digraph charts in a specific format without any other text, preamble, postamble or meta commentary. You do this accurately every time. Failing results in me losing my job.",
                 messages=[{"role": "user", "content": f"{mermaid_prompt}"}],
                 model=model_name,
                 max_tokens=4000,
