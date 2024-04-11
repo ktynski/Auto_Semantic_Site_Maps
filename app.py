@@ -297,6 +297,26 @@ def save_semantic_map_to_csv(semantic_map: Dict[str, Set], topic: str):
         for relationship in semantic_map["relationships"]:
             f.write(f"{relationship[0]},{relationship[1]},{relationship[2]}\n")
 
+
+import Levenshtein
+
+def merge_similar_nodes(G, similarity_threshold=0.8):
+    merged_nodes = set()
+    for node1 in G.nodes():
+        if node1 not in merged_nodes:
+            for node2 in G.nodes():
+                if node1 != node2 and node2 not in merged_nodes:
+                    label1 = G.nodes[node1]['label']
+                    label2 = G.nodes[node2]['label']
+                    similarity = Levenshtein.ratio(label1, label2)
+                    if similarity >= similarity_threshold:
+                        # Merge nodes
+                        G = nx.contracted_nodes(G, node1, node2, self_loops=False)
+                        merged_nodes.add(node2)
+                        break
+    return G
+
+
 # Streamlit app
 def main():
     st.set_page_config(page_title="Generating Semantically Complete Sitemaps with Large Language Models and Graph Analysis", layout="wide")
@@ -389,12 +409,18 @@ def main():
         edges_df = pd.read_csv(f"{topic}_relationships.csv")
         # Create a directed graph using NetworkX
         G = nx.DiGraph()
+
         # Add nodes to the graph
         for _, row in nodes_df.iterrows():
             G.add_node(row['Id'], label=row['Label'])
+
         # Add edges to the graph
         for _, row in edges_df.iterrows():
             G.add_edge(row['Source'], row['Target'], label=row['Type'])
+
+        # Merge similar nodes
+        G = merge_similar_nodes(G, similarity_threshold=0.8)
+
         # Calculate graph metrics
         with st.spinner("Calculating graph metrics..."):
             pagerank = nx.pagerank(G)
