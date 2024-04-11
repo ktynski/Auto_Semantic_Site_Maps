@@ -13,7 +13,7 @@ import scipy
 import json
 
 # Set up Anthropic API key
-ANTHROPIC_API_KEY = st.secrets["ANTHROPIC_API_KEY"]
+#ANTHROPIC_API_KEY = st.secrets["ANTHROPIC_API_KEY"]
 
 # Define models
 Opus = "claude-3-opus-20240229"
@@ -317,6 +317,8 @@ def main():
     # Sidebar
     st.sidebar.title("Settings")
     topic = st.sidebar.text_input("Topic", value="Enter Your Topic Here")
+    api_key = st.sidebar.text_input("Anthropic API Key", type="password")
+    ANTHROPIC_API_KEY = api_key
     num_iterations = st.sidebar.number_input("Number of Iterations", min_value=1, max_value=5, value=1)
     num_parallel_runs = st.sidebar.number_input("Number of Parallel Runs", min_value=1, max_value=10, value=5)
     num_entities_per_run = st.sidebar.number_input("Number of Entities per Run", min_value=1, max_value=20, value=10)
