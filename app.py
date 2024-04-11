@@ -19,6 +19,7 @@ Opus = "claude-3-opus-20240229"
 Sonnet = "claude-3-sonnet-20240229"
 Haiku = "claude-3-haiku-20240307"
 
+progress_bar = None
 
 template = {
     "Pillars": [
@@ -339,50 +340,44 @@ def main():
         if not ANTHROPIC_API_KEY:
             st.error("Please enter a valid Anthropic API key.")
         else:
-            progress_bar = st.progress(0)
             status_text = st.empty()
-        progress_bar = st.progress(0)
-        status_text = st.empty()
-        
-        # Generate semantic map
-        progress_bar = st.progress(0)
-        status_text = st.empty()
-        
-        # Generate semantic map
-        entity_generator = EntityGenerator(llm)
-        relationship_generator = RelationshipGenerator(llm)
-        semantic_map_generator = SemanticMapGenerator(entity_generator, relationship_generator)
-        with st.spinner("Generating semantic map..."):
-            entities_placeholder = st.empty()
-            relationships_placeholder = st.empty()
-            entities_count = 0
-            relationships_count = 0
-        
-            for iteration in range(num_iterations):
-                # Parallel entity generation
-                with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
-                    futures = []
-                    for _ in range(num_parallel_runs):
-                        future = executor.submit(entity_generator.generate_entities, topic, semantic_map_generator.entities, num_entities_per_run, temperature)
-                        futures.append(future)
-                    new_entities = {}
-                    for future in concurrent.futures.as_completed(futures):
-                        new_entities.update(future.result())
-                
-                # Deduplicate entities
-                semantic_map_generator.entities.update(new_entities)
-                entities_count += len(new_entities)
-                entities_placeholder.metric("Total Entities", entities_count)
-                
-                # Parallel relationship generation
-                new_relationships = relationship_generator.generate_relationships(topic, semantic_map_generator.entities, semantic_map_generator.relationships, relationship_batch_size, num_parallel_runs)
-                semantic_map_generator.relationships.update(new_relationships)
-                relationships_count += len(new_relationships)
-                relationships_placeholder.metric("Total Relationships", relationships_count)
-                progress_bar.progress((iteration + 1) / num_iterations)
-            
-            progress_bar.progress(0.2)
+
+            # Generate semantic map
+            entity_generator = EntityGenerator(llm)
+            relationship_generator = RelationshipGenerator(llm)
+            semantic_map_generator = SemanticMapGenerator(entity_generator, relationship_generator)
+            with st.spinner("Generating semantic map..."):
+                entities_placeholder = st.empty()
+                relationships_placeholder = st.empty()
+                entities_count = 0
+                relationships_count = 0
+
+                for iteration in range(num_iterations):
+                    # Parallel entity generation
+                    with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+                        futures = []
+                        for _ in range(num_parallel_runs):
+                            future = executor.submit(entity_generator.generate_entities, topic, semantic_map_generator.entities, num_entities_per_run, temperature)
+                            futures.append(future)
+                        new_entities = {}
+                        for future in concurrent.futures.as_completed(futures):
+                            new_entities.update(future.result())
+
+                    # Deduplicate entities
+                    semantic_map_generator.entities.update(new_entities)
+                    entities_count += len(new_entities)
+                    entities_placeholder.metric("Total Entities", entities_count)
+
+                    # Parallel relationship generation
+                    new_relationships = relationship_generator.generate_relationships(topic, semantic_map_generator.entities, semantic_map_generator.relationships, relationship_batch_size, num_parallel_runs)
+                    semantic_map_generator.relationships.update(new_relationships)
+                    relationships_count += len(new_relationships)
+                    relationships_placeholder.metric("Total Relationships", relationships_count)
+
+                    progress_bar.progress((iteration + 1) / num_iterations)
+
             status_text.text("Semantic map generated.")
+
         # Save semantic map to CSV
         save_semantic_map_to_csv({"entities": semantic_map_generator.entities, "relationships": semantic_map_generator.relationships}, topic)
         progress_bar.progress(0.4)
@@ -506,4 +501,5 @@ def main():
         st.graphviz_chart(mermaid_chart)
 
 if __name__ == "__main__":
+    progress_bar = st.progress(0)
     main()
