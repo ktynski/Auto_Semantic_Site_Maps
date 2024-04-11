@@ -336,6 +336,8 @@ def main():
     model_name = st.sidebar.selectbox("Claude Model", [Opus, Sonnet, Haiku], index=2)
     # Initialize LLM
     llm = ChatAnthropic(temperature=0.2, model_name=model_name, max_tokens=4000, api_key=ANTHROPIC_API_KEY)
+    global progress_bar
+    progress_bar = st.progress(0)
     if st.sidebar.button("Generate Semantic Map"):
         if not ANTHROPIC_API_KEY:
             st.error("Please enter a valid Anthropic API key.")
