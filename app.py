@@ -484,7 +484,7 @@ def main():
             )
             mermaid_chart = mermaid_response.content[0].text
             print(mermaid_chart)
-        st.markdown("## Site Map Visualization")
+        #st.markdown("## Site Map Visualization")
         st.graphviz_chart(mermaid_chart)
 
 if __name__ == "__main__":
