@@ -302,7 +302,7 @@ def main():
     st.set_page_config(page_title="Generating Semantically Complete Sitemaps with Large Language Models and Graph Analysis", layout="wide")
     st.title("Semantically Complete SiteMaps with LLMs and Graph Analysis")
     description = """
-    ## What is this and How Does it Work?
+    ## What is this and how does it work?
 
         This Agenti AI tool leverages multiple advanced techniques to generate highly sophisticated, extremely comprehensive, SEO-optimized semantic sitemaps:
         
@@ -477,7 +477,7 @@ def main():
                 Generate a Graphviz DOT representation of the hierarchical structure of the semantic sitemap. Use the following JSON sitemap as input:
                 {sitemap_json}
                 Example Graphviz DOT:
-                ```dot
+                
                 digraph {{
                     rankdir=LR;
                     "Pillar 1" -> "Cluster 1";
@@ -487,7 +487,7 @@ def main():
                     "Cluster 2" -> "Spoke 3";
                     "Cluster 2" -> "Spoke 4";
                 }}
-                ```
+                
                 DO NOT return any commentary, preamble, postamble, or meta commentary on the task or its completion. Return ONLY the digraph. Your response should start with digraph and then a bracket."""
             mermaid_response = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY).messages.create(
                 system = "You are an AI that ouputs digraph charts in a specific format without any other text, preamble, postamble or meta commentary. You do this accurately every time. Failing results in me losing my job.",
@@ -499,7 +499,7 @@ def main():
             )
             mermaid_chart = mermaid_response.content[0].text
             print(mermaid_chart)
-        #st.markdown("## Site Map Visualization")
+        st.markdown("## Site Map Visualization")
         st.graphviz_chart(mermaid_chart)
 
 if __name__ == "__main__":
