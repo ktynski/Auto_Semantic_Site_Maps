@@ -322,8 +322,7 @@ def main():
     relationship_batch_size = st.sidebar.number_input("Relationship Batch Size", min_value=1, max_value=20, value=10)
     model_name = st.sidebar.selectbox("Claude Model", [Opus, Sonnet, Haiku], index=2)
     # Initialize LLM
-    llm = ChatAnthropic(temperature=0.2, model_name=model_name, max_tokens=4000)
-
+    llm = ChatAnthropic(temperature=0.2, model_name=model_name, max_tokens=4000, api_key=ANTHROPIC_API_KEY)
     if st.sidebar.button("Generate Semantic Map"):
         if not ANTHROPIC_API_KEY:
             st.error("Please enter a valid Anthropic API key.")
