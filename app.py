@@ -333,6 +333,10 @@ def main():
         status_text = st.empty()
         
         # Generate semantic map
+        progress_bar = st.progress(0)
+        status_text = st.empty()
+        
+        # Generate semantic map
         entity_generator = EntityGenerator(llm)
         relationship_generator = RelationshipGenerator(llm)
         semantic_map_generator = SemanticMapGenerator(entity_generator, relationship_generator)
@@ -341,7 +345,7 @@ def main():
             relationships_placeholder = st.empty()
             entities_count = 0
             relationships_count = 0
-            
+        
             for iteration in range(num_iterations):
                 # Parallel entity generation
                 with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
@@ -363,6 +367,7 @@ def main():
                 semantic_map_generator.relationships.update(new_relationships)
                 relationships_count += len(new_relationships)
                 relationships_placeholder.metric("Total Relationships", relationships_count)
+                progress_bar.progress((iteration + 1) / num_iterations)
             
             progress_bar.progress(0.2)
             status_text.text("Semantic map generated.")
@@ -476,6 +481,7 @@ def main():
                 ```
                 DO NOT return any commentary, preamble, postamble, or meta commentary on the task or its completion. Return ONLY the digraph. Your response should start with digraph and then a bracket."""
             mermaid_response = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY).messages.create(
+                system = "You are an AI that ouputs digraph charts in a specific format without any other text, preamble, postamble or meta commentary. You do this accurately every time. Failing results in me losing my job.
                 messages=[{"role": "user", "content": f"{mermaid_prompt}"}],
                 model=model_name,
                 max_tokens=4000,
