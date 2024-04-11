@@ -5,3 +5,4 @@ networkx
 python-louvain
 futures
 scipy
+python-Levenshtein
