@@ -402,15 +402,19 @@ def main():
                 with anthropic.Anthropic(api_key=ANTHROPIC_API_KEY).messages.stream(
                     model=Sonnet,
                     messages=[
-                        {"role": "user", "content": f" {system_prompt} \n Create an extensive and complete hierarchical json sitemap using the readout from the semantic graph research: \n {graph_data}. \n Before you do though, lay out an argument for your organization based on the corpus data. Use this template: \n {template} \n Justify it to yourself before writing the json outline. It should have Pillar, Cluster, and Spoke pages, include the top 3 other sections each should link to. Also include a sample article title under each item that represents the best possible Semantic SEO structure based on the following graph analysis for the topic: {corpus}"}
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": f"Create an extensive and complete hierarchical json sitemap using the readout from the semantic graph research: \n {graph_data}. \n Before you do though, lay out an argument for your organization based on the corpus data. Use this template: \n {template} \n Justify it to yourself before writing the json outline. It should have Pillar, Cluster, and Spoke pages, include the top 3 other sections each should link to. Also include a sample article title under each item that represents the best possible Semantic SEO structure based on the following graph analysis for the topic: {corpus}"}
                     ],
                     max_tokens=4000,
                     temperature=0.1,
                     stop_sequences=[],
                 ) as stream:
+                    sitemap_content = ""
                     for event in stream:
                         if event.type == "content_block_delta":
+                            sitemap_content += event.delta.text
                             yield event.delta.text
+                    return sitemap_content
 
             sitemap_response = st.write_stream(sitemap_stream())
 
@@ -418,8 +422,12 @@ def main():
             status_text.text("Sitemap generated.")
 
         # Display the number of sections in the sitemap
-        num_sections = len(outline["Sections"])
-        st.subheader(f"Number of Sections: {num_sections}")
+        try:
+            sitemap_json = json.loads(sitemap_response)
+            num_sections = len(sitemap_json["Sections"])
+            st.subheader(f"Number of Sections: {num_sections}")
+        except (json.JSONDecodeError, KeyError):
+            st.warning("Failed to parse the sitemap JSON or extract the number of sections.")
 
 if __name__ == "__main__":
     main()
