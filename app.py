@@ -302,14 +302,27 @@ def main():
     st.title("Generating Semantically Complete Site Maps with Large Language Models and Graph Analysis")
     description = """
     ## What is this?
-    This script leverages graph analysis techniques combined with the best current foundational Large Language Models from Anthropic to generate a highly sophisticated and SEO-optimized semantic sitemap. Semantic SEO-informed sitemaps are paramount for enhancing search rankings due to their ability to:
-    - Organize content in a semantically coherent manner, ensuring the grouping and appropriate linking of related topics.
-    - Leverage graph metrics (e.g., PageRank, betweenness centrality) to pinpoint the most crucial and authoritative nodes, informing content creation and internal linking strategies.
-    - Utilize community detection algorithms (e.g., Louvain) to identify clusters of closely related topics, facilitating a cohesive and interconnected content structure.
-    The script processes an extensive amount of data using the language model to generate entities and relationships pertaining to the topic. Depending on the user-defined parameters, the language model generates a staggering range of up to 5,000 unique entities and  25,000 relationships over multiple passes for a single given topic. This comprehensive data generation process ensures the creation of a semantic map that encapsulates the full breadth and depth of the topic.
-    Employing advanced graph analysis techniques, the script constructs a semantic map based on the generated data. It calculates complex graph metrics, including PageRank, betweenness centrality, and closeness centrality, to identify the most significant nodes. Furthermore, it applies the Louvain algorithm for community detection to uncover clusters of closely related topics.
-    The resulting hierarchical JSON sitemap serves as a blueprint for the LLM to construct a website structure that is semantically rich, well-organized, fully semantically thorough and highly optimized for search engines. By harnessing the power of advanced graph analysis techniques and state-of-the-art language models, this could save you significant time and effort while providing a data-driven approach to content organization and optimization that is difficult for humans to replicate in its sophistication and effectiveness.
-    """
+    # Generating Semantically Complete Sitemaps with LLMs and Graph Analysis
+
+        This Agenti AI tool leverages multiple advanced techniques to generate highly sophisticated, extremely comprehensive, SEO-optimized semantic sitemaps:
+        
+        - 🌐 **Graph analysis metrics** (PageRank, betweenness centrality) to identify crucial nodes
+        - 🧩 **Community detection algorithms** to uncover closely related topic clusters
+        - 🤖 **Large language models** to process extensive data and generate comprehensive semantic maps
+        
+        The tool automates the creation of semantically rich, well-organized, and search engine-optimized sitemaps that would be incredibly difficult and time-consuming to build manually. 
+        
+        > The resulting output is a hierarchical JSON sitemap that serves as a blueprint for constructing a website that is semantically rich, well-organized, and highly optimized for search engines.
+        
+        Key features:
+        - Generates up to 5,000 entities and 25,000 relationships for a given topic
+        - Provides concrete recommendations for optimizing website structure and content
+        - Automatically generates a Graphviz chart for easy visualization of the sitemap structure
+        
+        Benefits:
+        - 🚀 **Saves significant time and effort** compared to manual semantic mapping
+        - 📈 **Enhances search rankings** through semantically coherent content organization
+        - 🧠 **Leverages advanced data-driven techniques** that are hard to replicate through human analysis  """
     st.markdown(description)
     # Sidebar
     st.sidebar.title("Settings")
