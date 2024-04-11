@@ -12,8 +12,7 @@ import concurrent.futures
 import scipy
 import json
 
-# Set up Anthropic API key
-#ANTHROPIC_API_KEY = st.secrets["ANTHROPIC_API_KEY"]
+
 
 # Define models
 Opus = "claude-3-opus-20240229"
