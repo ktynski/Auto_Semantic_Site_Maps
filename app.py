@@ -417,18 +417,12 @@ def main():
                             yield event.delta.text
                     return sitemap_content
 
-            sitemap_response = st.write_stream(sitemap_stream())
+            #sitemap_response = st.write_stream(sitemap_stream())
             progress_bar.progress(1.0)
             status_text.text("Sitemap generated.")
-        st.code(sitemap_response)
+        st.code(sitemap_content)
 
-        # Display the number of sections in the sitemap
-        try:
-            sitemap_json = json.loads(sitemap_response)
-            num_sections = len(sitemap_json["Sections"])
-            st.subheader(f"Number of Sections: {num_sections}")
-        except (json.JSONDecodeError, KeyError):
-            st.warning("Failed to parse the sitemap JSON or extract the number of sections.")
+
 
 if __name__ == "__main__":
     main()
