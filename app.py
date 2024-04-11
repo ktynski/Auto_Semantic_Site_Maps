@@ -501,5 +501,4 @@ def main():
         st.graphviz_chart(mermaid_chart)
 
 if __name__ == "__main__":
-    progress_bar = st.progress(0)
     main()
