@@ -5,7 +5,7 @@ from langchain.chains import LLMChain
 from langchain_anthropic import ChatAnthropic
 import os
 import networkx as nx
-from community import community_louvain
+import community as community_louvain
 import anthropic
 from typing import Dict, Set
 import concurrent.futures
@@ -24,141 +24,141 @@ Haiku = "claude-3-haiku-20240307"
 llm = ChatAnthropic(temperature=0.2, model_name=Haiku, max_tokens=4000)
 
 template = {
-  "Pillars": [
-    {
-      "name": "Pillar 1",
-      "justification": "This pillar covers the core issues and concepts that are central to the overall topic, as determined by their high PageRank scores.",
-      "sample_article": "A Comprehensive Overview of [Topic]: Key Concepts, Issues, and Perspectives"
-    },
-    {
-      "name": "Pillar 2",
-      "justification": "This pillar focuses on the fundamental aspects and subtopics that are essential for understanding the main topic, based on their significant PageRank scores.",
-      "sample_article": "Exploring the Foundations of [Topic]: A Deep Dive into Core Principles and Theories"
-    },
-    {
-      "name": "Pillar 3",
-      "justification": "This pillar examines the critical components and themes that shape the overall discourse surrounding the main topic, as indicated by their notable PageRank scores.",
-      "sample_article": "Navigating the Landscape of [Topic]: Essential Elements and Influential Factors"
-    }
-  ],
-  "Clusters": [
-    {
-      "name": "Cluster 1",
-      "pillar": "Pillar 1",
-      "justification": "This cluster focuses on the closely related subtopics and themes that are crucial for comprehending the main pillar, as determined by their high betweenness centrality scores.",
-      "sample_article": "Unraveling the Intricacies of [Subtopic]: A Comprehensive Analysis",
-      "related_pillars": ["Pillar 2", "Pillar 3"]
-    },
-    {
-      "name": "Cluster 2",
-      "pillar": "Pillar 1",
-      "justification": "This cluster explores the interconnected concepts and ideas that bridge various aspects of the main pillar, based on their significant betweenness centrality scores.",
-      "sample_article": "Bridging the Gap: Examining the Interconnectedness of [Subtopic] within [Topic]",
-      "related_pillars": ["Pillar 2", "Pillar 3"]
-    },
-    {
-      "name": "Cluster 3",
-      "pillar": "Pillar 2",
-      "justification": "This cluster delves into the key issues and challenges associated with the main pillar, as indicated by their high betweenness centrality scores.",
-      "sample_article": "Confronting the Challenges of [Subtopic]: Strategies and Solutions",
-      "related_pillars": ["Pillar 1", "Pillar 3"]
-    },
-    {
-      "name": "Cluster 4",
-      "pillar": "Pillar 2",
-      "justification": "This cluster investigates the fundamental principles and theories that underpin the main pillar, based on their significant betweenness centrality scores.",
-      "sample_article": "Unveiling the Foundations: A Deep Dive into [Subtopic] Principles and Theories",
-      "related_pillars": ["Pillar 1", "Pillar 3"]
-    },
-    {
-      "name": "Cluster 5",
-      "pillar": "Pillar 3",
-      "justification": "This cluster examines the emerging trends and developments within the main pillar, as determined by their high betweenness centrality scores.",
-      "sample_article": "On the Horizon: Exploring Emerging Trends and Innovations in [Subtopic]",
-      "related_pillars": ["Pillar 1", "Pillar 2"]
-    },
-    {
-      "name": "Cluster 6",
-      "pillar": "Pillar 3",
-      "justification": "This cluster analyzes the impact and implications of the main pillar on various aspects of society and industry, based on their significant betweenness centrality scores.",
-      "sample_article": "The Ripple Effect: Examining the Impact of [Subtopic] on Society and Industry",
-      "related_pillars": ["Pillar 1", "Pillar 2"]
-    }
-  ],
-  "Spokes": [
-    {
-      "name": "Spoke 1",
-      "cluster": "Cluster 1",
-      "justification": "This spoke focuses on a specific aspect or application of the cluster, as determined by its high closeness centrality score.",
-      "sample_article": "Diving Deep: A Comprehensive Look at [Specific Aspect] within [Subtopic]"
-    },
-    {
-      "name": "Spoke 2",
-      "cluster": "Cluster 1",
-      "justification": "This spoke explores a particular case study or real-world example related to the cluster, based on its significant closeness centrality score.",
-      "sample_article": "From Theory to Practice: A Case Study on Implementing [Specific Aspect] in [Industry/Context]"
-    },
-    {
-      "name": "Spoke 3",
-      "cluster": "Cluster 2",
-      "justification": "This spoke examines a specific challenge or obstacle associated with the cluster, as indicated by its high closeness centrality score.",
-      "sample_article": "Overcoming Hurdles: Strategies for Addressing [Specific Challenge] in [Subtopic]"
-    },
-    {
-      "name": "Spoke 4",
-      "cluster": "Cluster 2",
-      "justification": "This spoke investigates a particular solution or approach related to the cluster, based on its significant closeness centrality score.",
-      "sample_article": "Innovative Solutions: Exploring [Specific Approach] for Tackling [Subtopic] Issues"
-    },
-    {
-      "name": "Spoke 5",
-      "cluster": "Cluster 3",
-      "justification": "This spoke analyzes a specific trend or pattern within the cluster, as determined by its high closeness centrality score.",
-      "sample_article": "Spotting the Trends: An In-Depth Analysis of [Specific Trend] in [Subtopic]"
-    },
-    {
-      "name": "Spoke 6",
-      "cluster": "Cluster 3",
-      "justification": "This spoke explores a particular methodology or framework related to the cluster, based on its significant closeness centrality score.",
-      "sample_article": "Frameworks for Success: Applying [Specific Methodology] in [Subtopic] Contexts"
-    },
-    {
-      "name": "Spoke 7",
-      "cluster": "Cluster 4",
-      "justification": "This spoke examines a specific application or use case associated with the cluster, as indicated by its high closeness centrality score.",
-      "sample_article": "From Concept to Application: Exploring [Specific Use Case] in [Subtopic]"
-    },
-    {
-      "name": "Spoke 8",
-      "cluster": "Cluster 4",
-      "justification": "This spoke investigates a particular best practice or guideline related to the cluster, based on its significant closeness centrality score.",
-      "sample_article": "Setting the Standard: Best Practices for Implementing [Specific Guideline] in [Subtopic]"
-    },
-    {
-      "name": "Spoke 9",
-      "cluster": "Cluster 5",
-      "justification": "This spoke analyzes a specific impact or consequence associated with the cluster, as determined by its high closeness centrality score.",
-      "sample_article": "The Domino Effect: Examining the Impact of [Specific Consequence] in [Subtopic]"
-    },
-    {
-      "name": "Spoke 10",
-      "cluster": "Cluster 5",
-      "justification": "This spoke explores a particular opportunity or potential related to the cluster, based on its significant closeness centrality score.",
-      "sample_article": "Unlocking Potential: Exploring [Specific Opportunity] in [Subtopic]"
-    },
-    {
-      "name": "Spoke 11",
-      "cluster": "Cluster 6",
-      "justification": "This spoke examines a specific case study or real-world example associated with the cluster, as indicated by its high closeness centrality score.",
-      "sample_article": "Lessons Learned: A Case Study on [Specific Example] in [Subtopic]"
-    },
-    {
-      "name": "Spoke 12",
-      "cluster": "Cluster 6",
-      "justification": "This spoke investigates a particular future direction or possibility related to the cluster, based on its significant closeness centrality score.",
-      "sample_article": "Envisioning the Future: Exploring [Specific Possibility] in [Subtopic]"
-    }
-  ]
+    "Pillars": [
+        {
+            "name": "Pillar 1",
+            "justification": "This pillar covers the core issues and concepts that are central to the overall topic, as determined by their high PageRank scores.",
+            "sample_article": "A Comprehensive Overview of [Topic]: Key Concepts, Issues, and Perspectives"
+        },
+        {
+            "name": "Pillar 2",
+            "justification": "This pillar focuses on the fundamental aspects and subtopics that are essential for understanding the main topic, based on their significant PageRank scores.",
+            "sample_article": "Exploring the Foundations of [Topic]: A Deep Dive into Core Principles and Theories"
+        },
+        {
+            "name": "Pillar 3",
+            "justification": "This pillar examines the critical components and themes that shape the overall discourse surrounding the main topic, as indicated by their notable PageRank scores.",
+            "sample_article": "Navigating the Landscape of [Topic]: Essential Elements and Influential Factors"
+        }
+    ],
+    "Clusters": [
+        {
+            "name": "Cluster 1",
+            "pillar": "Pillar 1",
+            "justification": "This cluster focuses on the closely related subtopics and themes that are crucial for comprehending the main pillar, as determined by their high betweenness centrality scores.",
+            "sample_article": "Unraveling the Intricacies of [Subtopic]: A Comprehensive Analysis",
+            "related_pillars": ["Pillar 2", "Pillar 3"]
+        },
+        {
+            "name": "Cluster 2",
+            "pillar": "Pillar 1",
+            "justification": "This cluster explores the interconnected concepts and ideas that bridge various aspects of the main pillar, based on their significant betweenness centrality scores.",
+            "sample_article": "Bridging the Gap: Examining the Interconnectedness of [Subtopic] within [Topic]",
+            "related_pillars": ["Pillar 2", "Pillar 3"]
+        },
+        {
+            "name": "Cluster 3",
+            "pillar": "Pillar 2",
+            "justification": "This cluster delves into the key issues and challenges associated with the main pillar, as indicated by their high betweenness centrality scores.",
+            "sample_article": "Confronting the Challenges of [Subtopic]: Strategies and Solutions",
+            "related_pillars": ["Pillar 1", "Pillar 3"]
+        },
+        {
+            "name": "Cluster 4",
+            "pillar": "Pillar 2",
+            "justification": "This cluster investigates the fundamental principles and theories that underpin the main pillar, based on their significant betweenness centrality scores.",
+            "sample_article": "Unveiling the Foundations: A Deep Dive into [Subtopic] Principles and Theories",
+            "related_pillars": ["Pillar 1", "Pillar 3"]
+        },
+        {
+            "name": "Cluster 5",
+            "pillar": "Pillar 3",
+            "justification": "This cluster examines the emerging trends and developments within the main pillar, as determined by their high betweenness centrality scores.",
+            "sample_article": "On the Horizon: Exploring Emerging Trends and Innovations in [Subtopic]",
+            "related_pillars": ["Pillar 1", "Pillar 2"]
+        },
+        {
+            "name": "Cluster 6",
+            "pillar": "Pillar 3",
+            "justification": "This cluster analyzes the impact and implications of the main pillar on various aspects of society and industry, based on their significant betweenness centrality scores.",
+            "sample_article": "The Ripple Effect: Examining the Impact of [Subtopic] on Society and Industry",
+            "related_pillars": ["Pillar 1", "Pillar 2"]
+        }
+    ],
+    "Spokes": [
+        {
+            "name": "Spoke 1",
+            "cluster": "Cluster 1",
+            "justification": "This spoke focuses on a specific aspect or application of the cluster, as determined by its high closeness centrality score.",
+            "sample_article": "Diving Deep: A Comprehensive Look at [Specific Aspect] within [Subtopic]"
+        },
+        {
+            "name": "Spoke 2",
+            "cluster": "Cluster 1",
+            "justification": "This spoke explores a particular case study or real-world example related to the cluster, based on its significant closeness centrality score.",
+            "sample_article": "From Theory to Practice: A Case Study on Implementing [Specific Aspect] in [Industry/Context]"
+        },
+        {
+            "name": "Spoke 3",
+            "cluster": "Cluster 2",
+            "justification": "This spoke examines a specific challenge or obstacle associated with the cluster, as indicated by its high closeness centrality score.",
+            "sample_article": "Overcoming Hurdles: Strategies for Addressing [Specific Challenge] in [Subtopic]"
+        },
+        {
+            "name": "Spoke 4",
+            "cluster": "Cluster 2",
+            "justification": "This spoke investigates a particular solution or approach related to the cluster, based on its significant closeness centrality score.",
+            "sample_article": "Innovative Solutions: Exploring [Specific Approach] for Tackling [Subtopic] Issues"
+        },
+        {
+            "name": "Spoke 5",
+            "cluster": "Cluster 3",
+            "justification": "This spoke analyzes a specific trend or pattern within the cluster, as determined by its high closeness centrality score.",
+            "sample_article": "Spotting the Trends: An In-Depth Analysis of [Specific Trend] in [Subtopic]"
+        },
+        {
+            "name": "Spoke 6",
+            "cluster": "Cluster 3",
+            "justification": "This spoke explores a particular methodology or framework related to the cluster, based on its significant closeness centrality score.",
+            "sample_article": "Frameworks for Success: Applying [Specific Methodology] in [Subtopic] Contexts"
+        },
+        {
+            "name": "Spoke 7",
+            "cluster": "Cluster 4",
+            "justification": "This spoke examines a specific application or use case associated with the cluster, as indicated by its high closeness centrality score.",
+            "sample_article": "From Concept to Application: Exploring [Specific Use Case] in [Subtopic]"
+        },
+        {
+            "name": "Spoke 8",
+            "cluster": "Cluster 4",
+            "justification": "This spoke investigates a particular best practice or guideline related to the cluster, based on its significant closeness centrality score.",
+            "sample_article": "Setting the Standard: Best Practices for Implementing [Specific Guideline] in [Subtopic]"
+        },
+        {
+            "name": "Spoke 9",
+            "cluster": "Cluster 5",
+            "justification": "This spoke analyzes a specific impact or consequence associated with the cluster, as determined by its high closeness centrality score.",
+            "sample_article": "The Domino Effect: Examining the Impact of [Specific Consequence] in [Subtopic]"
+        },
+        {
+            "name": "Spoke 10",
+            "cluster": "Cluster 5",
+            "justification": "This spoke explores a particular opportunity or potential related to the cluster, based on its significant closeness centrality score.",
+            "sample_article": "Unlocking Potential: Exploring [Specific Opportunity] in [Subtopic]"
+        },
+        {
+            "name": "Spoke 11",
+            "cluster": "Cluster 6",
+            "justification": "This spoke examines a specific case study or real-world example associated with the cluster, as indicated by its high closeness centrality score.",
+            "sample_article": "Lessons Learned: A Case Study on [Specific Example] in [Subtopic]"
+        },
+        {
+            "name": "Spoke 12",
+            "cluster": "Cluster 6",
+            "justification": "This spoke investigates a particular future direction or possibility related to the cluster, based on its significant closeness centrality score.",
+            "sample_article": "Envisioning the Future: Exploring [Specific Possibility] in [Subtopic]"
+        }
+    ]
 }
 
 class EntityGenerator:
@@ -256,29 +256,36 @@ class SemanticMapGenerator:
     def __init__(self, entity_generator: EntityGenerator, relationship_generator: RelationshipGenerator):
         self.entity_generator = entity_generator
         self.relationship_generator = relationship_generator
+        self.entities = {}
+        self.relationships = set()
 
     def generate_semantic_map(self, topic: str, num_iterations: int, num_parallel_runs: int, num_entities_per_run: int, temperature: float, relationship_batch_size: int) -> Dict[str, Set]:
-        entities = {}
-        relationships = set()
         for iteration in range(num_iterations):
             print(f"Iteration {iteration + 1}")
             # Parallel entity generation
             with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
                 futures = []
                 for _ in range(num_parallel_runs):
-                    future = executor.submit(self.entity_generator.generate_entities, topic , entities, num_entities_per_run, temperature)
+                    future = executor.submit(entity_generator.generate_entities, topic, semantic_map_generator.entities, num_entities_per_run, temperature)
                     futures.append(future)
                 new_entities = {}
+                total_futures = len(futures)
+                completed_futures = 0
                 for future in concurrent.futures.as_completed(futures):
                     new_entities.update(future.result())
+                    completed_futures += 1
+                    progress = completed_futures / total_futures
+                    progress_bar.progress(progress)  # Update progress bar
+
             # Deduplicate entities
-            entities.update(new_entities)
-            print(f"Total entities: {len(entities)}")
+            semantic_map_generator.entities.update(new_entities)
+            entities_count += len(new_entities)
+            entities_placeholder.metric("Total Entities", entities_count)
             # Parallel relationship generation
-            new_relationships = self.relationship_generator.generate_relationships(topic, entities, relationships, relationship_batch_size, num_parallel_runs)
-            relationships.update(new_relationships)
-            print(f"Total relationships: {len(relationships)}")
-        return {"entities": entities, "relationships": relationships}
+            new_relationships = self.relationship_generator.generate_relationships(topic, self.entities, self.relationships, relationship_batch_size, num_parallel_runs)
+            self.relationships.update(new_relationships)
+            print(f"Total relationships: {len(self.relationships)}")
+        return {"entities": self.entities, "relationships": self.relationships}
 
 def save_semantic_map_to_csv(semantic_map: Dict[str, Set], topic: str):
     entities_file = f"{topic}_entities.csv"
@@ -294,18 +301,29 @@ def save_semantic_map_to_csv(semantic_map: Dict[str, Set], topic: str):
 
 # Streamlit app
 def main():
-    st.set_page_config(page_title="Auto Semantic SiteMaps", layout="wide")
-    st.title("Auto Semantic SiteMaps")
-
+    st.set_page_config(page_title="Generating Semantically Complete Sitemaps with Large Language Models and Graph Analysis", layout="wide")
+    st.title("Generating Semantically Complete Site Maps with Large Language Models and Graph Analysis")
+    description = """
+    ## What is this?
+    This script leverages graph analysis techniques combined with the best current foundational Large Language Models from Anthropic to generate a highly sophisticated and SEO-optimized semantic sitemap. Semantic SEO-informed sitemaps are paramount for enhancing search rankings due to their ability to:
+    - Organize content in a semantically coherent manner, ensuring the grouping and appropriate linking of related topics.
+    - Leverage graph metrics (e.g., PageRank, betweenness centrality) to pinpoint the most crucial and authoritative nodes, informing content creation and internal linking strategies.
+    - Utilize community detection algorithms (e.g., Louvain) to identify clusters of closely related topics, facilitating a cohesive and interconnected content structure.
+    The script processes an extensive amount of data using the language model to generate entities and relationships pertaining to the topic. Depending on the user-defined parameters, the language model generates a staggering range of up to 5,000 unique entities and  25,000 relationships over multiple passes for a single given topic. This comprehensive data generation process ensures the creation of a semantic map that encapsulates the full breadth and depth of the topic.
+    Employing advanced graph analysis techniques, the script constructs a semantic map based on the generated data. It calculates complex graph metrics, including PageRank, betweenness centrality, and closeness centrality, to identify the most significant nodes. Furthermore, it applies the Louvain algorithm for community detection to uncover clusters of closely related topics.
+    The resulting hierarchical JSON sitemap serves as a blueprint for the LLM to construct a website structure that is semantically rich, well-organized, fully semantically thorough and highly optimized for search engines. By harnessing the power of advanced graph analysis techniques and state-of-the-art language models, this could save you significant time and effort while providing a data-driven approach to content organization and optimization that is difficult for humans to replicate in its sophistication and effectiveness.
+    """
+    st.markdown(description)
     # Sidebar
     st.sidebar.title("Settings")
-    topic = st.sidebar.text_input("Topic", value="Stochastic Terrorism of the Far Right in the USA Against LGBT_relationships")
-    num_iterations = st.sidebar.number_input("Number of Iterations", min_value=1, value=1)
-    num_parallel_runs = st.sidebar.number_input("Number of Parallel Runs", min_value=1, value=10)
-    num_entities_per_run = st.sidebar.number_input("Number of Entities per Run", min_value=1, value=30)
-    temperature = st.sidebar.slider("Temperature", min_value=0.0, max_value=2.0, value=1.2, step=0.1)
-    relationship_batch_size = st.sidebar.number_input("Relationship Batch Size", min_value=1, value=30)
-
+    topic = st.sidebar.text_input("Topic", value="Enter Your Topic Here")
+    num_iterations = st.sidebar.number_input("Number of Iterations", min_value=1, max_value=5, value=1)
+    num_parallel_runs = st.sidebar.number_input("Number of Parallel Runs", min_value=1, max_value=10, value=5)
+    num_entities_per_run = st.sidebar.number_input("Number of Entities per Run", min_value=1, max_value=20, value=10)
+    temperature = st.sidebar.slider("Temperature", min_value=0.0, max_value=1.0, value=0.7, step=0.1)
+    relationship_batch_size = st.sidebar.number_input("Relationship Batch Size", min_value=1, max_value=20, value=10)
+    model_name = st.sidebar.selectbox("Claude Model", [Opus, Sonnet, Haiku], index=2)
+    llm = ChatAnthropic(temperature=0.2, model_name=model_name, max_tokens=4000)
     if st.sidebar.button("Generate Semantic Map"):
         progress_bar = st.progress(0)
         status_text = st.empty()
@@ -314,32 +332,51 @@ def main():
         entity_generator = EntityGenerator(llm)
         relationship_generator = RelationshipGenerator(llm)
         semantic_map_generator = SemanticMapGenerator(entity_generator, relationship_generator)
-
         with st.spinner("Generating semantic map..."):
-            semantic_map = semantic_map_generator.generate_semantic_map(topic, num_iterations, num_parallel_runs, num_entities_per_run, temperature, relationship_batch_size)
+            entities_placeholder = st.empty()
+            relationships_placeholder = st.empty()
+            entities_count = 0
+            relationships_count = 0
+            
+            for iteration in range(num_iterations):
+                # Parallel entity generation
+                with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+                    futures = []
+                    for _ in range(num_parallel_runs):
+                        future = executor.submit(entity_generator.generate_entities, topic, semantic_map_generator.entities, num_entities_per_run, temperature)
+                        futures.append(future)
+                    new_entities = {}
+                    for future in concurrent.futures.as_completed(futures):
+                        new_entities.update(future.result())
+                
+                # Deduplicate entities
+                semantic_map_generator.entities.update(new_entities)
+                entities_count += len(new_entities)
+                entities_placeholder.metric("Total Entities", entities_count)
+                
+                # Parallel relationship generation
+                new_relationships = relationship_generator.generate_relationships(topic, semantic_map_generator.entities, semantic_map_generator.relationships, relationship_batch_size, num_parallel_runs)
+                semantic_map_generator.relationships.update(new_relationships)
+                relationships_count += len(new_relationships)
+                relationships_placeholder.metric("Total Relationships", relationships_count)
+            
             progress_bar.progress(0.2)
             status_text.text("Semantic map generated.")
-
         # Save semantic map to CSV
-        save_semantic_map_to_csv(semantic_map, topic)
+        save_semantic_map_to_csv({"entities": semantic_map_generator.entities, "relationships": semantic_map_generator.relationships}, topic)
         progress_bar.progress(0.4)
         status_text.text("Semantic map saved to CSV.")
-
         # Load the CSV files into DataFrames
         nodes_df = pd.read_csv(f"{topic}_entities.csv")
         edges_df = pd.read_csv(f"{topic}_relationships.csv")
-
         # Create a directed graph using NetworkX
         G = nx.DiGraph()
-
         # Add nodes to the graph
         for _, row in nodes_df.iterrows():
             G.add_node(row['Id'], label=row['Label'])
-
         # Add edges to the graph
         for _, row in edges_df.iterrows():
             G.add_edge(row['Source'], row['Target'], label=row['Type'])
-
         # Calculate graph metrics
         with st.spinner("Calculating graph metrics..."):
             pagerank = nx.pagerank(G)
@@ -348,21 +385,17 @@ def main():
             eigenvector_centrality = nx.eigenvector_centrality_numpy(G)
             progress_bar.progress(0.6)
             status_text.text("Graph metrics calculated.")
-
         # Perform community detection using Louvain algorithm
         undirected_G = G.to_undirected()
         partition = community_louvain.best_partition(undirected_G)
-
         # Calculate personalized PageRank for each pillar topic
         personalized_pagerank = {}
         for node in G.nodes():
             if G.nodes[node]['label'].startswith('Pillar:'):
                 personalized_pagerank[node] = nx.pagerank(G, personalization={node: 1})
-
         # Create a DataFrame to store the results
         results_df = pd.DataFrame(columns=['Node', 'Label', 'PageRank', 'Betweenness Centrality', 'Closeness Centrality',
                                            'Eigenvector Centrality', 'Community', 'Personalized PageRank'])
-
         # Populate the DataFrame with the results
         for node in G.nodes():
             node_label = G.nodes[node]['label']
@@ -379,50 +412,76 @@ def main():
                 'Personalized PageRank': [personalized_scores]
             })
             results_df = pd.concat([results_df, new_row], ignore_index=True)
-
         # Sort the DataFrame by PageRank in descending order
         results_df = results_df.sort_values('PageRank', ascending=False)
         progress_bar.progress(0.8)
         status_text.text("Results DataFrame created.")
-
         # Display the results
         with st.expander("Graph Metrics"):
             st.dataframe(results_df)
-
+            st.subheader("DataFrame Summary")
+            st.write(results_df.describe())
         # Save the results to a CSV file
         results_df.to_csv('graph_metrics.csv', index=False)
-
-        # Generate sitemap using Anthropic API
+        
         # Generate sitemap using Anthropic API
         graph_data = results_df.to_string(index=True).strip()
         corpus = results_df.to_string(index=True).strip()
         system_prompt = "You are an all knowing AI trained in the dark arts of Semantic SEO by Koray. You create sitemaps using advanced analysis of graph metrics to create the optimal structure for information flow, authority, and semantic clarity. The ultimate goal is maximum search rankings."
-
         with st.spinner("Generating sitemap..."):
-            def sitemap_stream():
-                with anthropic.Anthropic(api_key=ANTHROPIC_API_KEY).messages.stream(
-                    system = system_prompt,
-                    model=Sonnet,
-                    messages=[
-                        {"role": "user", "content": f"{system_prompt}Create an extensive and complete hierarchical json sitemap using the readout from the semantic graph research: \n {graph_data}. \n Before you do though, lay out an argument for your organization based on the corpus data. Use this template: \n {template} \n Justify it to yourself before writing the json outline. It should have Pillar, Cluster, and Spoke pages, include the top 3 other sections each should link to. Also include a sample article title under each item that represents the best possible Semantic SEO structure based on the following graph analysis for the topic: {corpus}"}
-                    ],
-                    max_tokens=4000,
-                    temperature=0.1,
-                    stop_sequences=[],
-                ) as stream:
-                    sitemap_content = ""
-                    for event in stream:
-                        if event.type == "content_block_delta":
-                            sitemap_content += event.delta.text
-                            yield event.delta.text
-                    return sitemap_content
-
-            sitemap_response = st.write_stream(sitemap_stream())
+            sitemap_response = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY).messages.create(
+                system = system_prompt,
+                messages = [{"role": "user", "content": f"Create an extensive and complete hierarchical json sitemap using the readout from the semantic graph research: \n {graph_data}. \n Before you do though, lay out an argument for your organization based on the corpus data. Use this template: \n {template} \n Justify it to yourself before writing the json outline. It should have Pillar, Cluster, and Spoke pages, include the top 3 other sections each should link to. Also include a sample article title under each item that represents the best possible Semantic SEO structure based on the following graph analysis for the topic: {corpus}"}],
+                model=model_name,
+                max_tokens=4000,
+                temperature=0.1,
+                stop_sequences=[],
+            )
+            sitemap_json = sitemap_response.content[0].text
             progress_bar.progress(1.0)
             status_text.text("Sitemap generated.")
-        st.code(sitemap_response)
-
-
+        st.code(sitemap_json, language="json")
+        # Generate additional commentary and recommendations using Anthropic API
+        with st.spinner("Generating additional commentary and recommendations..."):
+            commentary_response = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY).messages.create(
+                system = system_prompt,
+                messages = [{"role": "user", "content": f"Based on the generated semantic sitemap and graph analysis, provide a few paragraphs of additional commentary and concrete recommendations for optimizing the website structure and content for semantic SEO. Consider factors such as internal linking, content depth and breadth, and user experience. Here is the graph you generated: {sitemap_json} and the underlying graph data research: {graph_data}"}],
+                model=model_name,
+                max_tokens=1000,
+                temperature=0.7,
+                stop_sequences=[],
+            )
+            commentary = commentary_response.content[0].text
+        st.markdown(commentary)
+        # Generate Mermaid chart using Anthropic API
+        with st.spinner("Generating Mermaid chart..."):
+            mermaid_prompt = f"""
+                Generate a Graphviz DOT representation of the hierarchical structure of the semantic sitemap. Use the following JSON sitemap as input:
+                {sitemap_json}
+                Example Graphviz DOT:
+                ```dot
+                digraph {{
+                    rankdir=LR;
+                    "Pillar 1" -> "Cluster 1";
+                    "Pillar 1" -> "Cluster 2";
+                    "Cluster 1" -> "Spoke 1";
+                    "Cluster 1" -> "Spoke 2";
+                    "Cluster 2" -> "Spoke 3";
+                    "Cluster 2" -> "Spoke 4";
+                }}
+                ```
+                DO NOT return any commentary, preamble, postamble, or meta commentary on the task or its completion. Return ONLY the digraph. Your response should start with digraph and then a bracket."""
+            mermaid_response = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY).messages.create(
+                messages=[{"role": "user", "content": f"{mermaid_prompt}"}],
+                model=model_name,
+                max_tokens=4000,
+                temperature=0.1,
+                stop_sequences=[],
+            )
+            mermaid_chart = mermaid_response.content[0].text
+            print(mermaid_chart)
+        st.markdown("## Site Map Visualization")
+        st.graphviz_chart(mermaid_chart)
 
 if __name__ == "__main__":
     main()
