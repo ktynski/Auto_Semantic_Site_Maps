@@ -417,10 +417,10 @@ def main():
                             yield event.delta.text
                     return sitemap_content
 
-            #sitemap_response = st.write_stream(sitemap_stream())
+            sitemap_response = st.write_stream(sitemap_stream())
             progress_bar.progress(1.0)
             status_text.text("Sitemap generated.")
-        st.code(sitemap_content)
+        st.code(sitemap_response)
 
 
 
