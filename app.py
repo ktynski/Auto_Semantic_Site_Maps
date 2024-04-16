@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-from langchain_core.prompts import PromptTemplate  # Importing PromptTemplate from langchain_core.prompts
+from langchain_core.prompts import PromptTemplate
 from langchain.chains import LLMChain
 from langchain_anthropic import ChatAnthropic
 import os
@@ -14,6 +14,19 @@ from streamlit import experimental_rerun
 import time
 import Levenshtein
 from stqdm import stqdm
+import requests
+from nltk.corpus import stopwords
+from nltk.tokenize import word_tokenize
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+import nltk
+from nltk import ngrams
+import spacy
+from spacy_entity_linker import EntityLinker
+from rake_nltk import Rake
+
+nltk.download('punkt')
+nltk.download('stopwords')
 
 # Define models
 Opus = "claude-3-opus-20240229"
@@ -424,6 +437,8 @@ def main():
             for node in G.nodes():
                 if G.nodes[node]['label'].startswith('Pillar:'):
                     personalized_pagerank[node] = nx.pagerank(G, personalization={node: 1})
+
+            
             # Create a DataFrame to store the results
             results_df = pd.DataFrame(columns=['Node', 'Label', 'PageRank', 'Betweenness Centrality', 'Closeness Centrality',
                                                'Eigenvector Centrality', 'Community', 'Personalized PageRank'])
