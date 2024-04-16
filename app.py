@@ -15,6 +15,7 @@ import time
 import Levenshtein
 from stqdm import stqdm
 import multiprocessing  # Importing multiprocessing directly
+from LLMCaller import LLMCaller  # Importing the LLMCaller class
 
 # Define models
 Opus = "claude-3-opus-20240229"
@@ -159,40 +160,6 @@ template = {
         }
     ]
 }
-
-import anthropic
-
-class LLMCaller:
-    @staticmethod
-    def make_llm_call(args):
-        """
-        Makes a call to the Anthropic LLM API with the provided arguments.
-
-        Args:
-            args (dict): A dictionary containing the following keys:
-                - api_key (str): The Anthropic API key for authentication.
-                - system_prompt (str): The system prompt for the LLM.
-                - prompt (str): The user prompt for the LLM.
-                - model_name (str): The name of the Claude model to use.
-                - max_tokens (int): The maximum number of tokens for the LLM response.
-                - temperature (float): The temperature value for the LLM response.
-
-        Returns:
-            str: The response from the LLM, or None if an exception occurred.
-        """
-        try:
-            response = anthropic.Anthropic(api_key=args["api_key"]).messages.create(
-                system=args["system_prompt"],
-                messages=[{"role": "user", "content": args["prompt"]}],
-                model=args["model_name"],
-                max_tokens=args["max_tokens"],
-                temperature=args["temperature"],
-                stop_sequences=[],
-            )
-            return response.content[0].text
-        except Exception as e:
-            print(f"Error making LLM call: {e}")
-            return None
 
 class EntityGenerator:
     """
@@ -364,7 +331,7 @@ class SemanticMapGenerator:
         Args:
             topic (str): The topic for which to generate the semantic map.
             num_iterations (int): The number of iterations to perform for generating entities and relationships.
-            num_parallel_runs (int): Thenumber of parallel runs to perform for entity and relationship generation.
+            num_parallel_runs (int): The number of parallel runs to perform for entity and relationship generation.
             num_entities_per_run (int): The number of new entities to generate in each run.
             temperature (float): The temperature value for the LLM response.
             relationship_batch_size (int): The size of the batches for parallel relationship generation.
@@ -629,7 +596,7 @@ def main():
                     'Community': [community],
                     'Personalized PageRank': [personalized_scores]
                 })
-                results_df = pd.concat([results_df, new_row], ignore_index=True)
+                results_df = pd.concat([results_df, new_row], ignore_index=True, sort=False)  # Updated to suppress FutureWarning
 
             # Sort the DataFrame by PageRank in descending order
             results_df = results_df.sort_values('PageRank', ascending=False)
@@ -660,13 +627,13 @@ def main():
                     "temperature": 0.1,
                 }
 
-            with multiprocessing.Pool() as pool:
-                sitemap_response = None
-                progress = stqdm(pool.imap(LLMCaller.make_llm_call, [llm_call_args]), total=1, desc="Generating Sitemap")
-                for result in progress:
-                    if result is not None:
-                        sitemap_response = result
-                        break
+                with multiprocessing.Pool() as pool:
+                    sitemap_response = None
+                    progress = stqdm(pool.imap(LLMCaller.make_llm_call, [llm_call_args]), total=1, desc="Generating Sitemap")
+                    for result in progress:
+                        if result is not None:
+                            sitemap_response = result
+                            break
 
             if sitemap_response is not None:
                 sitemap_json = sitemap_response
@@ -688,7 +655,7 @@ def main():
 
                 with multiprocessing.Pool() as pool:
                     commentary_response = None
-                    progress = stqdm(pool.imap(make_llm_call, [llm_call_args]), total=1, desc="Generating Commentary")
+                    progress = stqdm(pool.imap(LLMCaller.make_llm_call, [llm_call_args]), total=1, desc="Generating Commentary")
                     for result in progress:
                         if result is not None:
                             commentary_response = result
@@ -730,7 +697,7 @@ def main():
 
                 with multiprocessing.Pool() as pool:
                     mermaid_response = None
-                    progress = stqdm(pool.imap(make_llm_call, [llm_call_args]), total=1, desc="Generating Mermaid Chart")
+                    progress = stqdm(pool.imap(LLMCaller.make_llm_call, [llm_call_args]), total=1, desc="Generating Mermaid Chart")
                     for result in progress:
                         if result is not None:
                             mermaid_response = result
