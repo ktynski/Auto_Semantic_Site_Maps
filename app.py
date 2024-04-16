@@ -599,7 +599,7 @@ def main():
             progress.close()
         
         mermaid_chart = mermaid_response.content[0].text
-            print(mermaid_chart)
+        print(mermaid_chart)
         
         st.markdown("## Site Map Visualization")
         st.graphviz_chart(mermaid_chart, use_container_width=True)
