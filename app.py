@@ -636,9 +636,9 @@ def main():
                 llm_call_args = {
                     "api_key": ANTHROPIC_API_KEY,
                     "system_prompt": system_prompt,
-                    "prompt": f"Based on the generated semantic sitemap and graph analysis, provide a few paragraphs of additional commentary and concrete recommendations that are highly specific for the given topic and provided sitemap for optimizing the website structure and content for semantic SEO. Consider factors such as internal linking anchortext, content depth and breadth, and user experience. Here is the graph you generated: {sitemap_json} and the underlying graph data research: {graph_data}",
+                    "prompt": f"Based on the generated semantic sitemap and graph analysis, provide a few paragraphs of additional commentary and concrete recommendations that are highly specific for the given data toward creating the most thorough, useful, information gain/Semantic SEO Optimized site possible for the given topic and provided sitemap. Consider factors such as internal linking anchortext, content depth and breadth, and user experience. Here is the graph you generated: {sitemap_json} and the underlying graph data research: {graph_data}",
                     "model_name": model_name,
-                    "max_tokens": 1000,
+                    "max_tokens": 4000,
                     "temperature": 0.2,
                 }
                 with concurrent.futures.ThreadPoolExecutor() as executor:
