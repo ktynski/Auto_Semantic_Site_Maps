@@ -348,10 +348,10 @@ def main():
     st.sidebar.title("Settings")
     topic = st.sidebar.text_input("Topic", value="Enter Your Topic Here")
     ANTHROPIC_API_KEY = st.sidebar.text_input("Anthropic API Key", type="password")
-    num_iterations = st.sidebar.number_input("Number of Iterations", min_value=1, max_value=5, value=1)
+    num_iterations = st.sidebar.number_input("Number of Iterations", min_value=1, max_value=3, value=1)
     num_parallel_runs = st.sidebar.number_input("Number of Parallel Runs", min_value=1, max_value=10, value=5)
     num_entities_per_run = st.sidebar.number_input("Number of Entities per Run", min_value=1, max_value=20, value=10)
-    temperature = st.sidebar.slider("Temperature", min_value=0.0, max_value=1.0, value=0.7, step=0.1)
+    temperature = st.sidebar.slider("Temperature", min_value=0.0, max_value=1.0, value=0.5, step=0.1)
     relationship_batch_size = st.sidebar.number_input("Relationship Batch Size", min_value=1, max_value=20, value=10)
     model_name = st.sidebar.selectbox("Claude Model", [Opus, Sonnet, Haiku], index=2)
     # Initialize LLM
@@ -489,10 +489,10 @@ def main():
         with st.spinner("Generating additional commentary and recommendations..."):
             commentary_response = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY).messages.create(
                 system = system_prompt,
-                messages = [{"role": "user", "content": f"Based on the generated semantic sitemap and graph analysis, provide a few paragraphs of additional commentary and concrete recommendations for optimizing the website structure and content for semantic SEO. Consider factors such as internal linking, content depth and breadth, and user experience. Here is the graph you generated: {sitemap_json} and the underlying graph data research: {graph_data}"}],
+                messages = [{"role": "user", "content": f"Based on the generated semantic sitemap and graph analysis, provide a few paragraphs of additional commentary and concrete recommendations that are highly specific for the given topic and provided sitemap for optimizing the website structure and content for semantic SEO. Consider factors such as internal linking anchortext, content depth and breadth, and user experience. Here is the graph you generated: {sitemap_json} and the underlying graph data research: {graph_data}"}],
                 model=model_name,
                 max_tokens=1000,
-                temperature=0.7,
+                temperature=0.2,
                 stop_sequences=[],
             )
             commentary = commentary_response.content[0].text
