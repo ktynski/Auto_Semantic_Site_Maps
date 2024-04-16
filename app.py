@@ -284,7 +284,7 @@ class RelationshipGenerator:
             and the existing relationships:
             {existing_relationships}
             Your task is to identify relevant relationships between the given entities and the other entities in the context of the topic.
-            Use domain knowledge to prioritize important connections and provide meaningful edge labels. You must give each entity no less than 2 relationships and no more than 10 relationships for any individual entity. You must return all requested entity relationships.
+            Use domain knowledge to prioritize important connections and provide meaningful edge labels. You must give each entity no less than 2 relationships and no more than 5 relationships for any individual entity. You must return all requested entity relationships.
             Example output:
             source_id1,target_id1,edge_label1
             source_id2,target_id2,edge_label2
@@ -474,7 +474,7 @@ def main():
         > The resulting output is a hierarchical JSON sitemap that serves as a blueprint for constructing a website that is semantically rich, well-organized, and highly optimized for search engines.
         
         Key features:
-        - Generates up to 5,000 entities and 25,000 relationships for a given topic
+        - Generates up to 100-5000 entities and up to 25,000 relationships for a given topic (higher end would take quite a while to run)
         - Provides concrete recommendations for optimizing website structure and content
         - Automatically generates a Graphviz chart for easy visualization of the sitemap structure
         
@@ -494,7 +494,7 @@ def main():
     relationship_batch_size = st.sidebar.number_input("Relationship Batch Size", min_value=20, max_value=100, value=40, help="The batch size for generating relationships between entities. Higher values process relationships in larger batches, potentially reducing runtime but consuming more memory.")
     model_name = st.sidebar.selectbox("Claude Model", [Opus, Sonnet, Haiku], index=2, help="The specific Claude model to use for generating the semantic sitemap, commentary, and Mermaid chart.")
     # Initialize LLM
-    llm = ChatAnthropic(temperature=0.2, model_name=model_name, max_tokens=4000, api_key=ANTHROPIC_API_KEY)
+    llm = ChatAnthropic(temperature=0.2, model_name=model_name, max_tokens=1000, api_key=ANTHROPIC_API_KEY)
     global progress_bar
     progress_bar = st.progress(0)
     if st.sidebar.button("Generate Semantic Map"):
