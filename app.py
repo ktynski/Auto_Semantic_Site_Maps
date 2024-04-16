@@ -13,6 +13,8 @@ import json
 from streamlit import experimental_rerun
 import time
 import Levenshtein
+from stqdm import stqdm
+
 
 # Define models
 Opus = "claude-3-opus-20240229"
@@ -263,24 +265,21 @@ class SemanticMapGenerator:
         entities_placeholder = st.empty()
         relationships_placeholder = st.empty()
     
-        for iteration in range(num_iterations):
-            # Parallel entity generation
-            with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
-                futures = []
-                for _ in range(num_parallel_runs):
-                    future = executor.submit(self.entity_generator.generate_entities, topic, self.entities, num_entities_per_run, temperature)
-                    futures.append(future)
-                
-                # Simulate intermediate progress for entity generation
-                for _ in range(num_parallel_runs):
-                    progress = (iteration * num_parallel_runs + _ + 1) / (num_iterations * num_parallel_runs)
-                    progress_bar.progress(progress)
-                    time.sleep(0.1)
-    
-                new_entities = {}
-                for future in concurrent.futures.as_completed(futures):
-                    new_entities.update(future.result())
-    
+        for iteration in stqdm(range(num_iterations), desc="Generating Semantic Map"):
+                # Parallel entity generation
+                with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+                    futures = []
+                    for _ in range(num_parallel_runs):
+                        future = executor.submit(self.entity_generator.generate_entities, topic, self.entities, num_entities_per_run, temperature)
+                        futures.append(future)
+        
+                    progress = stqdm(total=num_parallel_runs, desc="Generating Entities", leave=False)
+                    new_entities = {}
+                    for future in concurrent.futures.as_completed(futures):
+                        new_entities.update(future.result())
+                        progress.update(1)
+                        time.sleep(0.1)  # Simulate progress
+                    progress.close()
             # Deduplicate entities
             self.entities.update(new_entities)
             entities_count += len(new_entities)
@@ -306,21 +305,18 @@ def save_semantic_map_to_csv(semantic_map: Dict[str, Set], topic: str):
     entities_file = f"{topic}_entities.csv"
     with open(entities_file, "w") as f:
         f.write("Id,Label\n")
-        for i, (id, entity) in enumerate(semantic_map["entities"].items()):
+        progress = stqdm(semantic_map["entities"].items(), desc="Saving Entities to CSV", total=len(semantic_map["entities"]))
+        for id, entity in progress:
             f.write(f"{id},{entity}\n")
-            progress = (i + 1) / len(semantic_map["entities"])
-            progress_bar.progress(progress)
-            time.sleep(0.01)
+            time.sleep(0.01)  # Simulate progress
 
     relationships_file = f"{topic}_relationships.csv"
     with open(relationships_file, "w") as f:
         f.write("Source,Target,Type\n")
-        for i, relationship in enumerate(semantic_map["relationships"]):
+        progress = stqdm(semantic_map["relationships"], desc="Saving Relationships to CSV", total=len(semantic_map["relationships"]))
+        for relationship in progress:
             f.write(f"{relationship[0]},{relationship[1]},{relationship[2]}\n")
-            progress = (i + 1) / len(semantic_map["relationships"])
-            progress_bar.progress(progress)
-            time.sleep(0.01)
-
+            time.sleep(0.01)  # Simulate progress
 
 
 def merge_similar_nodes(G, similarity_threshold=0.8):
@@ -444,24 +440,26 @@ def main():
         # Merge similar nodes
         G = merge_similar_nodes(G, similarity_threshold=0.8)
 
-        # Calculate graph metrics
         with st.spinner("Calculating graph metrics..."):
+            progress = stqdm(total=4, desc="Calculating Graph Metrics")
+        
             pagerank = nx.pagerank(G)
-            progress_bar.progress(0.25)
-            time.sleep(0.1)
+            progress.update(1)
+            time.sleep(0.1)  # Simulate progress
         
             betweenness_centrality = nx.betweenness_centrality(G)
-            progress_bar.progress(0.5)
-            time.sleep(0.1)
+            progress.update(1)
+            time.sleep(0.1)  # Simulate progress
         
             closeness_centrality = nx.closeness_centrality(G)
-            progress_bar.progress(0.75)
-            time.sleep(0.1)
+            progress.update(1)
+            time.sleep(0.1)  # Simulate progress
         
             eigenvector_centrality = nx.eigenvector_centrality_numpy(G)
-            progress_bar.progress(1.0)
-            time.sleep(0.1)
+            progress.update(1)
+            time.sleep(0.1)  # Simulate progress
         
+            progress.close()
             status_text.text("Graph metrics calculated.")
         # Perform community detection using Louvain algorithm
         undirected_G = G.to_undirected()
@@ -502,6 +500,7 @@ def main():
         # Save the results to a CSV file
         results_df.to_csv('graph_metrics.csv', index=False)
         
+
         # Generate sitemap using Anthropic API
         graph_data = results_df.to_string(index=True).strip()
         corpus = results_df.to_string(index=True).strip()
@@ -509,7 +508,7 @@ def main():
         
         with st.spinner("Generating sitemap..."):
             sitemap_response = None
-            progress = 0.0
+            progress = stqdm(total=100, desc="Generating Sitemap")
             while sitemap_response is None:
                 try:
                     sitemap_response = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY).messages.create(
@@ -524,17 +523,19 @@ def main():
                     print(f"Error generating sitemap: {e}")
                     time.sleep(1)  # Wait for a short time before retrying
                 
-                progress += 0.1
-                progress_bar.progress(min(progress, 1.0))
-                time.sleep(0.1)
+                # Simulate progress
+                progress.update(10)
+                time.sleep(0.5)
         
-            sitemap_json = sitemap_response.content[0].text
-            status_text.text("Sitemap generated.")
+            progress.close()
+        
+        sitemap_json = sitemap_response.content[0].text
+        status_text.text("Sitemap generated.")
         st.code(sitemap_json, language="json")
         # Generate additional commentary and recommendations using Anthropic API
         with st.spinner("Generating additional commentary and recommendations..."):
             commentary_response = None
-            progress = 0.0
+            progress = stqdm(total=100, desc="Generating Commentary")
             while commentary_response is None:
                 try:
                     commentary_response = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY).messages.create(
@@ -548,13 +549,15 @@ def main():
                 except Exception as e:
                     print(f"Error generating commentary: {e}")
                     time.sleep(1)  # Wait for a short time before retrying
+                
+                progress.update(10)
+                time.sleep(0.1)  # Simulate progress
         
-                progress += 0.1
-                progress_bar.progress(min(progress, 1.0))
-                time.sleep(0.1)
+            progress.close()
         
-            commentary = commentary_response.content[0].text
+        commentary = commentary_response.content[0].text
         st.markdown(commentary)
+        # Generate Mermaid chart using Anthropic API
         # Generate Mermaid chart using Anthropic API
         with st.spinner("Generating Mermaid chart..."):
             mermaid_prompt = f"""
@@ -575,7 +578,7 @@ def main():
                 DO NOT return any commentary, preamble, postamble, or meta commentary on the task or its completion. Return ONLY the digraph. Your response should start with digraph and then a bracket."""
         
             mermaid_response = None
-            progress = 0.0
+            progress = stqdm(total=100, desc="Generating Mermaid Chart")
             while mermaid_response is None:
                 try:
                     mermaid_response = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY).messages.create(
@@ -590,11 +593,12 @@ def main():
                     print(f"Error generating Mermaid chart: {e}")
                     time.sleep(1)  # Wait for a short time before retrying
         
-                progress += 0.1
-                progress_bar.progress(min(progress, 1.0))
-                time.sleep(0.1)
+                progress.update(10)
+                time.sleep(0.1)  # Simulate progress
         
-            mermaid_chart = mermaid_response.content[0].text
+            progress.close()
+        
+        mermaid_chart = mermaid_response.content[0].text
             print(mermaid_chart)
         
         st.markdown("## Site Map Visualization")
