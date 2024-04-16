@@ -11,7 +11,7 @@ from typing import Dict, Set
 import concurrent.futures
 import json
 from streamlit import experimental_rerun
-
+import time
 
 
 # Define models
@@ -260,9 +260,9 @@ class SemanticMapGenerator:
     def generate_semantic_map(self, topic: str, num_iterations: int, num_parallel_runs: int, num_entities_per_run: int, temperature: float, relationship_batch_size: int) -> Dict[str, Set]:
         entities_count = 0
         relationships_count = 0
-        entities_placeholder = st.empty()  # Initialize entities_placeholder
-        relationships_placeholder = st.empty()  # Initialize relationships_placeholder
-
+        entities_placeholder = st.empty()
+        relationships_placeholder = st.empty()
+    
         for iteration in range(num_iterations):
             # Parallel entity generation
             with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
@@ -273,22 +273,25 @@ class SemanticMapGenerator:
                 new_entities = {}
                 for future in concurrent.futures.as_completed(futures):
                     new_entities.update(future.result())
-
+    
             # Deduplicate entities
             self.entities.update(new_entities)
             entities_count += len(new_entities)
-            entities_placeholder.metric("Total Entities", entities_count)
-
+    
             # Parallel relationship generation
             new_relationships = self.relationship_generator.generate_relationships(topic, self.entities, self.relationships, relationship_batch_size, num_parallel_runs)
             self.relationships.update(new_relationships)
             relationships_count += len(new_relationships)
+    
+            # Update progress bars and metrics
+            entities_placeholder.metric("Total Entities", entities_count)
             relationships_placeholder.metric("Total Relationships", relationships_count)
-
             progress = (iteration + 1) / num_iterations
             progress_bar.progress(progress)
-            experimental_rerun()
-
+    
+            # Add a small delay to allow the app to refresh
+            time.sleep(0.1)
+    
         return {"entities": self.entities, "relationships": self.relationships}
 
 def save_semantic_map_to_csv(semantic_map: Dict[str, Set], topic: str):
