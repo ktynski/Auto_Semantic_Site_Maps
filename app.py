@@ -24,6 +24,8 @@ from nltk import ngrams
 import spacy
 from spacy_entity_linker import EntityLinker
 from rake_nltk import Rake
+import zipfile
+
 
 nltk.download('punkt')
 nltk.download('stopwords')
