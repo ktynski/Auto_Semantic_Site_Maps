@@ -1,6 +1,3 @@
-Sure, here's the full updated code with improved commenting and the necessary changes to other functions:
-
-```python
 import streamlit as st
 import pandas as pd
 from langchain_core.prompts import PromptTemplate  # Importing PromptTemplate from langchain_core.prompts
