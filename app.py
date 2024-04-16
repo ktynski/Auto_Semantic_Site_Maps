@@ -168,10 +168,10 @@ template = {
 
 def make_llm_call(args):
     try:
-        response = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY).messages.create(
-            system=system_prompt,
+        response = anthropic.Anthropic(api_key=args["api_key"]).messages.create(
+            system=args["system_prompt"],
             messages=[{"role": "user", "content": args["prompt"]}],
-            model=model_name,
+            model=args["model_name"],
             max_tokens=args["max_tokens"],
             temperature=args["temperature"],
             stop_sequences=[],
@@ -389,14 +389,14 @@ def main():
     st.markdown(description)
     # Sidebar
     st.sidebar.title("Settings")
-    topic = st.sidebar.text_input("Topic", value="Enter Your Topic Here")
-    ANTHROPIC_API_KEY = st.sidebar.text_input("Anthropic API Key", type="password")
-    num_iterations = st.sidebar.number_input("Number of Iterations", min_value=1, max_value=3, value=1)
-    num_parallel_runs = st.sidebar.number_input("Number of Parallel Runs", min_value=1, max_value=10, value=5)
-    num_entities_per_run = st.sidebar.number_input("Number of Entities per Run", min_value=1, max_value=20, value=10)
-    temperature = st.sidebar.slider("Temperature", min_value=0.0, max_value=1.0, value=0.5, step=0.1)
-    relationship_batch_size = st.sidebar.number_input("Relationship Batch Size", min_value=1, max_value=20, value=10)
-    model_name = st.sidebar.selectbox("Claude Model", [Opus, Sonnet, Haiku], index=2)
+    topic = st.sidebar.text_input("Topic", value="Enter Your Topic Here", help="The main topic or theme for which the semantic sitemap will be generated.")
+    ANTHROPIC_API_KEY = st.sidebar.text_input("Anthropic API Key", type="password", help="Your Anthropic API key to authenticate and access the language model.")
+    num_iterations = st.sidebar.number_input("Number of Iterations", min_value=1, max_value=3, value=1, help="The number of iterations to perform for generating entities and relationships. Higher values result in a more comprehensive semantic map but increase runtime.")
+    num_parallel_runs = st.sidebar.number_input("Number of Parallel Runs", min_value=1, max_value=10, value=5, help="The number of parallel runs for entity and relationship generation. Higher values can speed up the process but utilize more system resources.")
+    num_entities_per_run = st.sidebar.number_input("Number of Entities per Run", min_value=1, max_value=20, value=10, help="The number of new entities to generate in each run. Higher values generate more entities per run, resulting in a more detailed semantic map but increasing runtime.")
+    temperature = st.sidebar.slider("Temperature", min_value=0.0, max_value=1.0, value=0.5, step=0.1, help="Controls the randomness and creativity of the generated entities and relationships. Lower values produce more focused results, while higher values introduce more diversity.")
+    relationship_batch_size = st.sidebar.number_input("Relationship Batch Size", min_value=1, max_value=20, value=10, help="The batch size for generating relationships between entities. Higher values process relationships in larger batches, potentially reducing runtime but consuming more memory.")
+    model_name = st.sidebar.selectbox("Claude Model", [Opus, Sonnet, Haiku], index=2, help="The specific Claude model to use for generating the semantic sitemap, commentary, and Mermaid chart.")
     # Initialize LLM
     llm = ChatAnthropic(temperature=0.2, model_name=model_name, max_tokens=4000, api_key=ANTHROPIC_API_KEY)
     global progress_bar
@@ -532,7 +532,10 @@ def main():
     
         with st.spinner("Generating sitemap..."):
             llm_call_args = {
+                "api_key": ANTHROPIC_API_KEY,
+                "system_prompt": system_prompt,
                 "prompt": f"Create an extensive and complete hierarchical json sitemap using the readout from the semantic graph research: \n {graph_data}. \n Before you do though, lay out an argument for your organization based on the corpus data. Use this template: \n {template} \n Justify it to yourself before writing the json outline. It should have Pillar, Cluster, and Spoke pages, include the top 3 other sections each should link to. Also include a sample article title under each item that represents the best possible Semantic SEO structure based on the following graph analysis for the topic: {corpus}",
+                "model_name": model_name,
                 "max_tokens": 4000,
                 "temperature": 0.1,
             }
