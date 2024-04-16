@@ -8,5 +8,4 @@ scipy
 python-Levenshtein
 tqdm
 stqdm
-streamlit-multiselect
-streamlit-option-menu
+
