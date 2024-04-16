@@ -552,82 +552,69 @@ def main():
             sitemap_json = sitemap_response
             status_text.text("Sitemap generated.")
             st.code(sitemap_json, language="json")
+            # Generate additional commentary and recommendations using Anthropic API
+            with st.spinner("Generating additional commentary and recommendations..."):
+                llm_call_args = {
+                    "prompt": f"Based on the generated semantic sitemap and graph analysis, provide a few paragraphs of additional commentary and concrete recommendations that are highly specific for the given topic and provided sitemap for optimizing the website structure and content for semantic SEO. Consider factors such as internal linking anchortext, content depth and breadth, and user experience. Here is the graph you generated: {sitemap_json} and the underlying graph data research: {graph_data}",
+                    "max_tokens": 1000,
+                    "temperature": 0.2,
+                }
+            
+                with Pool() as pool:
+                    commentary_response = None
+                    progress = stqdm(pool.imap(make_llm_call, [llm_call_args]), total=1, desc="Generating Commentary")
+                    for result in progress:
+                        if result is not None:
+                            commentary_response = result
+                            break
+            
+                if commentary_response is not None:
+                    commentary = commentary_response
+                    st.markdown(commentary)
+                else:
+                    st.error("Failed to generate commentary and recommendations.")
+            
+            # Generate Mermaid chart using Anthropic API
+            with st.spinner("Generating Mermaid chart..."):
+                mermaid_prompt = f"""
+                    Generate a Graphviz DOT representation of the hierarchical structure of the semantic sitemap. Use the following JSON sitemap as input:
+                    {sitemap_json}
+                    Example Graphviz DOT:
+                    
+                    digraph {{
+                        rankdir=LR;
+                        "Pillar 1" -> "Cluster 1";
+                        "Pillar 1" -> "Cluster 2";
+                        "Cluster 1" -> "Spoke 1";
+                        "Cluster 1" -> "Spoke 2";
+                        "Cluster 2" -> "Spoke 3";
+                        "Cluster 2" -> "Spoke 4";
+                    }}
+                    
+                    DO NOT return any commentary, preamble, postamble, or meta commentary on the task or its completion. Return ONLY the digraph. Your response should start with digraph and then a bracket."""
+            
+                llm_call_args = {
+                    "prompt": mermaid_prompt,
+                    "max_tokens": 4000,
+                    "temperature": 0.1,
+                }
+            
+                with Pool() as pool:
+                    mermaid_response = None
+                    progress = stqdm(pool.imap(make_llm_call, [llm_call_args]), total=1, desc="Generating Mermaid Chart")
+                    for result in progress:
+                        if result is not None:
+                            mermaid_response = result
+                            break
+            
+                if mermaid_response is not None:
+                    mermaid_chart = mermaid_response
+                    st.markdown("## Site Map Visualization")
+                    st.graphviz_chart(mermaid_chart, use_container_width=True)
+                else:
+                    st.error("Failed to generate Mermaid chart.")
         else:
             st.error("Failed to generate sitemap.")
-        
-        sitemap_json = sitemap_response.content[0].text
-        status_text.text("Sitemap generated.")
-        st.code(sitemap_json, language="json")
-        # Generate additional commentary and recommendations using Anthropic API
-        with st.spinner("Generating additional commentary and recommendations..."):
-            llm_call_args = {
-                "prompt": f"Based on the generated semantic sitemap and graph analysis, provide a few paragraphs of additional commentary and concrete recommendations that are highly specific for the given topic and provided sitemap for optimizing the website structure and content for semantic SEO. Consider factors such as internal linking anchortext, content depth and breadth, and user experience. Here is the graph you generated: {sitemap_json} and the underlying graph data research: {graph_data}",
-                "max_tokens": 1000,
-                "temperature": 0.2,
-            }
-        
-            with Pool() as pool:
-                commentary_response = None
-                progress = stqdm(pool.imap(make_llm_call, [llm_call_args]), total=1, desc="Generating Commentary")
-                for result in progress:
-                    if result is not None:
-                        commentary_response = result
-                        break
-        
-            if commentary_response is not None:
-                commentary = commentary_response
-                st.markdown(commentary)
-            else:
-                st.error("Failed to generate commentary and recommendations.")
-        
-        commentary = commentary_response.content[0].text
-        st.markdown(commentary)
-        # Generate Mermaid chart using Anthropic API
-        # Generate Mermaid chart using Anthropic API
-        with st.spinner("Generating Mermaid chart..."):
-            mermaid_prompt = f"""
-                Generate a Graphviz DOT representation of the hierarchical structure of the semantic sitemap. Use the following JSON sitemap as input:
-                {sitemap_json}
-                Example Graphviz DOT:
-                
-                digraph {{
-                    rankdir=LR;
-                    "Pillar 1" -> "Cluster 1";
-                    "Pillar 1" -> "Cluster 2";
-                    "Cluster 1" -> "Spoke 1";
-                    "Cluster 1" -> "Spoke 2";
-                    "Cluster 2" -> "Spoke 3";
-                    "Cluster 2" -> "Spoke 4";
-                }}
-                
-                DO NOT return any commentary, preamble, postamble, or meta commentary on the task or its completion. Return ONLY the digraph. Your response should start with digraph and then a bracket."""
-        
-            llm_call_args = {
-                "prompt": mermaid_prompt,
-                "max_tokens": 4000,
-                "temperature": 0.1,
-            }
-        
-            with Pool() as pool:
-                mermaid_response = None
-                progress = stqdm(pool.imap(make_llm_call, [llm_call_args]), total=1, desc="Generating Mermaid Chart")
-                for result in progress:
-                    if result is not None:
-                        mermaid_response = result
-                        break
-        
-            if mermaid_response is not None:
-                mermaid_chart = mermaid_response
-                st.markdown("## Site Map Visualization")
-                st.graphviz_chart(mermaid_chart, use_container_width=True)
-            else:
-                st.error("Failed to generate Mermaid chart.")
-        
-        mermaid_chart = mermaid_response.content[0].text
-        print(mermaid_chart)
-        
-        st.markdown("## Site Map Visualization")
-        st.graphviz_chart(mermaid_chart, use_container_width=True)
 
 
 if __name__ == "__main__":
