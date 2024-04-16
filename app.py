@@ -12,7 +12,7 @@ import concurrent.futures
 import json
 from streamlit import experimental_rerun
 import time
-
+import Levenshtein
 
 # Define models
 Opus = "claude-3-opus-20240229"
@@ -270,6 +270,13 @@ class SemanticMapGenerator:
                 for _ in range(num_parallel_runs):
                     future = executor.submit(self.entity_generator.generate_entities, topic, self.entities, num_entities_per_run, temperature)
                     futures.append(future)
+                
+                # Simulate intermediate progress for entity generation
+                for _ in range(num_parallel_runs):
+                    progress = (iteration * num_parallel_runs + _ + 1) / (num_iterations * num_parallel_runs)
+                    progress_bar.progress(progress)
+                    time.sleep(0.1)
+    
                 new_entities = {}
                 for future in concurrent.futures.as_completed(futures):
                     new_entities.update(future.result())
@@ -283,14 +290,15 @@ class SemanticMapGenerator:
             self.relationships.update(new_relationships)
             relationships_count += len(new_relationships)
     
-            # Update progress bars and metrics
+            # Simulate intermediate progress for relationship generation
+            for _ in range(num_parallel_runs):
+                progress = (iteration * num_parallel_runs + _ + 1) / (num_iterations * num_parallel_runs)
+                progress_bar.progress(progress)
+                time.sleep(0.1)
+    
+            # Update metrics
             entities_placeholder.metric("Total Entities", entities_count)
             relationships_placeholder.metric("Total Relationships", relationships_count)
-            progress = (iteration + 1) / num_iterations
-            progress_bar.progress(progress)
-    
-            # Add a small delay to allow the app to refresh
-            time.sleep(0.1)
     
         return {"entities": self.entities, "relationships": self.relationships}
 
@@ -298,16 +306,22 @@ def save_semantic_map_to_csv(semantic_map: Dict[str, Set], topic: str):
     entities_file = f"{topic}_entities.csv"
     with open(entities_file, "w") as f:
         f.write("Id,Label\n")
-        for id, entity in semantic_map["entities"].items():
+        for i, (id, entity) in enumerate(semantic_map["entities"].items()):
             f.write(f"{id},{entity}\n")
+            progress = (i + 1) / len(semantic_map["entities"])
+            progress_bar.progress(progress)
+            time.sleep(0.01)
+
     relationships_file = f"{topic}_relationships.csv"
     with open(relationships_file, "w") as f:
         f.write("Source,Target,Type\n")
-        for relationship in semantic_map["relationships"]:
+        for i, relationship in enumerate(semantic_map["relationships"]):
             f.write(f"{relationship[0]},{relationship[1]},{relationship[2]}\n")
+            progress = (i + 1) / len(semantic_map["relationships"])
+            progress_bar.progress(progress)
+            time.sleep(0.01)
 
 
-import Levenshtein
 
 def merge_similar_nodes(G, similarity_threshold=0.8):
     merged_nodes = set()
@@ -433,10 +447,21 @@ def main():
         # Calculate graph metrics
         with st.spinner("Calculating graph metrics..."):
             pagerank = nx.pagerank(G)
+            progress_bar.progress(0.25)
+            time.sleep(0.1)
+        
             betweenness_centrality = nx.betweenness_centrality(G)
+            progress_bar.progress(0.5)
+            time.sleep(0.1)
+        
             closeness_centrality = nx.closeness_centrality(G)
+            progress_bar.progress(0.75)
+            time.sleep(0.1)
+        
             eigenvector_centrality = nx.eigenvector_centrality_numpy(G)
-            progress_bar.progress(0.6)
+            progress_bar.progress(1.0)
+            time.sleep(0.1)
+        
             status_text.text("Graph metrics calculated.")
         # Perform community detection using Louvain algorithm
         undirected_G = G.to_undirected()
@@ -481,29 +506,53 @@ def main():
         graph_data = results_df.to_string(index=True).strip()
         corpus = results_df.to_string(index=True).strip()
         system_prompt = "You are an all knowing AI trained in the dark arts of Semantic SEO by Koray. You create sitemaps using advanced analysis of graph metrics to create the optimal structure for information flow, authority, and semantic clarity. The ultimate goal is maximum search rankings."
+        
         with st.spinner("Generating sitemap..."):
-            sitemap_response = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY).messages.create(
-                system = system_prompt,
-                messages = [{"role": "user", "content": f"Create an extensive and complete hierarchical json sitemap using the readout from the semantic graph research: \n {graph_data}. \n Before you do though, lay out an argument for your organization based on the corpus data. Use this template: \n {template} \n Justify it to yourself before writing the json outline. It should have Pillar, Cluster, and Spoke pages, include the top 3 other sections each should link to. Also include a sample article title under each item that represents the best possible Semantic SEO structure based on the following graph analysis for the topic: {corpus}"}],
-                model=model_name,
-                max_tokens=4000,
-                temperature=0.1,
-                stop_sequences=[],
-            )
+            sitemap_response = None
+            progress = 0.0
+            while sitemap_response is None:
+                try:
+                    sitemap_response = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY).messages.create(
+                        system=system_prompt,
+                        messages=[{"role": "user", "content": f"Create an extensive and complete hierarchical json sitemap using the readout from the semantic graph research: \n {graph_data}. \n Before you do though, lay out an argument for your organization based on the corpus data. Use this template: \n {template} \n Justify it to yourself before writing the json outline. It should have Pillar, Cluster, and Spoke pages, include the top 3 other sections each should link to. Also include a sample article title under each item that represents the best possible Semantic SEO structure based on the following graph analysis for the topic: {corpus}"}],
+                        model=model_name,
+                        max_tokens=4000,
+                        temperature=0.1,
+                        stop_sequences=[],
+                    )
+                except Exception as e:
+                    print(f"Error generating sitemap: {e}")
+                    time.sleep(1)  # Wait for a short time before retrying
+                
+                progress += 0.1
+                progress_bar.progress(min(progress, 1.0))
+                time.sleep(0.1)
+        
             sitemap_json = sitemap_response.content[0].text
-            progress_bar.progress(1.0)
             status_text.text("Sitemap generated.")
         st.code(sitemap_json, language="json")
         # Generate additional commentary and recommendations using Anthropic API
         with st.spinner("Generating additional commentary and recommendations..."):
-            commentary_response = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY).messages.create(
-                system = system_prompt,
-                messages = [{"role": "user", "content": f"Based on the generated semantic sitemap and graph analysis, provide a few paragraphs of additional commentary and concrete recommendations that are highly specific for the given topic and provided sitemap for optimizing the website structure and content for semantic SEO. Consider factors such as internal linking anchortext, content depth and breadth, and user experience. Here is the graph you generated: {sitemap_json} and the underlying graph data research: {graph_data}"}],
-                model=model_name,
-                max_tokens=1000,
-                temperature=0.2,
-                stop_sequences=[],
-            )
+            commentary_response = None
+            progress = 0.0
+            while commentary_response is None:
+                try:
+                    commentary_response = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY).messages.create(
+                        system=system_prompt,
+                        messages=[{"role": "user", "content": f"Based on the generated semantic sitemap and graph analysis, provide a few paragraphs of additional commentary and concrete recommendations that are highly specific for the given topic and provided sitemap for optimizing the website structure and content for semantic SEO. Consider factors such as internal linking anchortext, content depth and breadth, and user experience. Here is the graph you generated: {sitemap_json} and the underlying graph data research: {graph_data}"}],
+                        model=model_name,
+                        max_tokens=1000,
+                        temperature=0.2,
+                        stop_sequences=[],
+                    )
+                except Exception as e:
+                    print(f"Error generating commentary: {e}")
+                    time.sleep(1)  # Wait for a short time before retrying
+        
+                progress += 0.1
+                progress_bar.progress(min(progress, 1.0))
+                time.sleep(0.1)
+        
             commentary = commentary_response.content[0].text
         st.markdown(commentary)
         # Generate Mermaid chart using Anthropic API
@@ -524,16 +573,30 @@ def main():
                 }}
                 
                 DO NOT return any commentary, preamble, postamble, or meta commentary on the task or its completion. Return ONLY the digraph. Your response should start with digraph and then a bracket."""
-            mermaid_response = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY).messages.create(
-                system = "You are an AI that ouputs digraph charts in a specific format without any other text, preamble, postamble or meta commentary. You do this accurately every time. Failing results in me losing my job.",
-                messages=[{"role": "user", "content": f"{mermaid_prompt}"}],
-                model=model_name,
-                max_tokens=4000,
-                temperature=0.1,
-                stop_sequences=[],
-            )
+        
+            mermaid_response = None
+            progress = 0.0
+            while mermaid_response is None:
+                try:
+                    mermaid_response = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY).messages.create(
+                        system="You are an AI that outputs digraph charts in a specific format without any other text, preamble, postamble or meta commentary. You do this accurately every time. Failing results in me losing my job.",
+                        messages=[{"role": "user", "content": f"{mermaid_prompt}"}],
+                        model=model_name,
+                        max_tokens=4000,
+                        temperature=0.1,
+                        stop_sequences=[],
+                    )
+                except Exception as e:
+                    print(f"Error generating Mermaid chart: {e}")
+                    time.sleep(1)  # Wait for a short time before retrying
+        
+                progress += 0.1
+                progress_bar.progress(min(progress, 1.0))
+                time.sleep(0.1)
+        
             mermaid_chart = mermaid_response.content[0].text
             print(mermaid_chart)
+        
         st.markdown("## Site Map Visualization")
         st.graphviz_chart(mermaid_chart, use_container_width=True)
 
