@@ -266,20 +266,20 @@ class SemanticMapGenerator:
         relationships_placeholder = st.empty()
     
         for iteration in stqdm(range(num_iterations), desc="Generating Semantic Map"):
-                # Parallel entity generation
-                with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
-                    futures = []
-                    for _ in range(num_parallel_runs):
-                        future = executor.submit(self.entity_generator.generate_entities, topic, self.entities, num_entities_per_run, temperature)
-                        futures.append(future)
-        
-                    progress = stqdm(total=num_parallel_runs, desc="Generating Entities", leave=False)
-                    new_entities = {}
-                    for future in concurrent.futures.as_completed(futures):
-                        new_entities.update(future.result())
-                        progress.update(1)
-                        time.sleep(0.1)  # Simulate progress
-                    progress.close()
+            # Parallel entity generation
+            with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+                futures = []
+                for _ in range(num_parallel_runs):
+                    future = executor.submit(self.entity_generator.generate_entities, topic, self.entities, num_entities_per_run, temperature)
+                    futures.append(future)
+    
+                progress = stqdm(total=num_parallel_runs, desc="Generating Entities", leave=False)
+                new_entities = {}
+                for future in concurrent.futures.as_completed(futures):
+                    new_entities.update(future.result())
+                    progress.update(1)
+                    time.sleep(0.1)  # Simulate progress
+                progress.close()
             # Deduplicate entities
             self.entities.update(new_entities)
             entities_count += len(new_entities)
