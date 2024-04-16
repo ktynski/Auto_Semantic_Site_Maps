@@ -161,6 +161,45 @@ template = {
     ]
 }
 
+
+
+
+
+class LLMCaller:
+    @staticmethod
+    def make_llm_call(args):
+        """
+        Makes a call to the Anthropic LLM API with the provided arguments.
+
+        Args:
+            args (dict): A dictionary containing the following keys:
+                - api_key (str): The Anthropic API key for authentication.
+                - system_prompt (str): The system prompt for the LLM.
+                - prompt (str): The user prompt for the LLM.
+                - model_name (str): The name of the Claude model to use.
+                - max_tokens (int): The maximum number of tokens for the LLM response.
+                - temperature (float): The temperature value for the LLM response.
+
+        Returns:
+            str: The response from the LLM, or None if an exception occurred.
+        """
+        try:
+            response = anthropic.Anthropic(api_key=args["api_key"]).messages.create(
+                system=args["system_prompt"],
+                messages=[{"role": "user", "content": args["prompt"]}],
+                model=args["model_name"],
+                max_tokens=args["max_tokens"],
+                temperature=args["temperature"],
+                stop_sequences=[],
+            )
+            return response.content[0].text
+        except Exception as e:
+            print(f"Error making LLM call: {e}")
+            return None
+
+
+
+
 class EntityGenerator:
     """
     A class for generating new entities related to a given topic.
