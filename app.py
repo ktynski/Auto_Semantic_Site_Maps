@@ -274,9 +274,11 @@ class SemanticMapGenerator:
                     futures.append(future)
     
                 progress = stqdm(total=num_parallel_runs, desc="Generating Entities", leave=False)
+                progress.update(1)
                 new_entities = {}
                 for future in concurrent.futures.as_completed(futures):
                     new_entities.update(future.result())
+                    progress.update(-1)
                     progress.update(1)
                     time.sleep(0.1)  # Simulate progress
                 progress.close()
