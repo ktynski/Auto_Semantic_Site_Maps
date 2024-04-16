@@ -9,8 +9,8 @@ import community as community_louvain
 import anthropic
 from typing import Dict, Set
 import concurrent.futures
-import scipy
 import json
+from streamlit import experimental_rerun
 
 
 
@@ -258,31 +258,37 @@ class SemanticMapGenerator:
         self.relationships = set()
 
     def generate_semantic_map(self, topic: str, num_iterations: int, num_parallel_runs: int, num_entities_per_run: int, temperature: float, relationship_batch_size: int) -> Dict[str, Set]:
+        entities_count = 0
+        relationships_count = 0
+        entities_placeholder = st.empty()  # Initialize entities_placeholder
+        relationships_placeholder = st.empty()  # Initialize relationships_placeholder
+
         for iteration in range(num_iterations):
-            print(f"Iteration {iteration + 1}")
             # Parallel entity generation
             with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
                 futures = []
                 for _ in range(num_parallel_runs):
-                    future = executor.submit(entity_generator.generate_entities, topic, semantic_map_generator.entities, num_entities_per_run, temperature)
+                    future = executor.submit(self.entity_generator.generate_entities, topic, self.entities, num_entities_per_run, temperature)
                     futures.append(future)
                 new_entities = {}
-                total_futures = len(futures)
-                completed_futures = 0
                 for future in concurrent.futures.as_completed(futures):
                     new_entities.update(future.result())
-                    completed_futures += 1
-                    progress = completed_futures / total_futures
-                    progress_bar.progress(progress)  # Update progress bar
 
             # Deduplicate entities
-            semantic_map_generator.entities.update(new_entities)
+            self.entities.update(new_entities)
             entities_count += len(new_entities)
             entities_placeholder.metric("Total Entities", entities_count)
+
             # Parallel relationship generation
             new_relationships = self.relationship_generator.generate_relationships(topic, self.entities, self.relationships, relationship_batch_size, num_parallel_runs)
             self.relationships.update(new_relationships)
-            print(f"Total relationships: {len(self.relationships)}")
+            relationships_count += len(new_relationships)
+            relationships_placeholder.metric("Total Relationships", relationships_count)
+
+            progress = (iteration + 1) / num_iterations
+            progress_bar.progress(progress)
+            experimental_rerun()
+
         return {"entities": self.entities, "relationships": self.relationships}
 
 def save_semantic_map_to_csv(semantic_map: Dict[str, Set], topic: str):
