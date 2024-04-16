@@ -613,7 +613,7 @@ def main():
                 llm_call_args = {
                     "api_key": ANTHROPIC_API_KEY,
                     "system_prompt": system_prompt,
-                    "prompt": f"Create an extensive and complete hierarchical json sitemap using the readout from the semantic graph research: \n {graph_data}. \n Before you do though, lay out an argument for your organization based on the corpus data. Use this template: \n {template} \n Justify it to yourself before writing the json outline. It should have Pillar, Cluster, and Spoke pages, include the top 3 other sections each should link to. Also include a sample article title under each item that represents the best possible Semantic SEO structure based on the following graph analysis for the topic: {corpus}",
+                    "prompt": f"Create an extensive and complete hierarchical json sitemap using the readout from the semantic graph research: \n {graph_data}. \n Before you do though, lay out an argument for your organization based on the corpus data. Use this template: \n {template} \n Justify it to yourself before writing the json outline. It should have Pillar, Cluster, and Spoke pages, include the top 3 other sections each should link to. Also include a sample article title under each item that represents the best possible Semantic SEO structure based on the following graph analysis for the topic: {corpus}. Make sure you use descriptive labels and not generic ones like Cluster1 or Pillar5",
                     "model_name": model_name,
                     "max_tokens": 4000,
                     "temperature": 0.1,
@@ -636,10 +636,10 @@ def main():
                 llm_call_args = {
                     "api_key": ANTHROPIC_API_KEY,
                     "system_prompt": system_prompt,
-                    "prompt": f"Based on the generated semantic sitemap and graph analysis, provide a few paragraphs of additional commentary and concrete recommendations that are highly specific for the given data toward creating the most thorough, useful, information gain/Semantic SEO Optimized site possible for the given topic and provided sitemap. Consider factors such as internal linking anchortext, content depth and breadth, and user experience. Here is the graph you generated: {sitemap_json} and the underlying graph data research: {graph_data}",
+                    "prompt": f"Based on the generated semantic sitemap and graph analysis, provide a few paragraphs of additional commentary and concrete recommendations tied to specific information from the analysis. Make sure you are not giving generic advice that would apply to nearly any case, it must be specific to this case. Consider factors such as internal linking anchortext, content depth and breadth, and user experience. Here is the graph you generated: {sitemap_json} and the underlying graph data research: {graph_data}",
                     "model_name": model_name,
                     "max_tokens": 4000,
-                    "temperature": 0.2,
+                    "temperature": 0.7,
                 }
                 with concurrent.futures.ThreadPoolExecutor() as executor:
                     commentary_response = None
