@@ -488,8 +488,8 @@ def main():
     topic = st.sidebar.text_input("Topic", value="Enter Your Topic Here", help="The main topic or theme for which the semantic sitemap will be generated.")
     ANTHROPIC_API_KEY = st.sidebar.text_input("Anthropic API Key", type="password", help="Your Anthropic API key to authenticate and access the language model.")
     num_iterations = st.sidebar.number_input("Number of Iterations", min_value=1, max_value=3, value=1, help="The number of iterations to perform for generating entities and relationships. Higher values result in a more comprehensive semantic map but increase runtime.")
-    num_parallel_runs = st.sidebar.number_input("Number of Parallel Runs", min_value=1, max_value=20, value=5, help="The number of parallel runs for entity and relationship generation. Higher values can speed up the process but utilize more system resources.")
-    num_entities_per_run = st.sidebar.number_input("Number of Entities per Run", min_value=1, max_value=20, value=10, help="The number of new entities to generate in each run. Higher values generate more entities per run, resulting in a more detailed semantic map but increasing runtime.")
+    num_parallel_runs = st.sidebar.number_input("Number of Parallel Runs", min_value=1, max_value=20, value=10, help="The number of parallel runs for entity and relationship generation. Higher values can speed up the process but utilize more system resources.")
+    num_entities_per_run = st.sidebar.number_input("Number of Entities per Run", min_value=1, max_value=20, value=5, help="The number of new entities to generate in each run. Higher values generate more entities per run, resulting in a more detailed semantic map but increasing runtime.")
     temperature = st.sidebar.slider("Temperature", min_value=0.0, max_value=1.0, value=0.5, step=0.1, help="Controls the randomness and creativity of the generated entities and relationships. Lower values produce more focused results, while higher values introduce more diversity.")
     relationship_batch_size = st.sidebar.number_input("Relationship Batch Size", min_value=20, max_value=100, value=40, help="The batch size for generating relationships between entities. Higher values process relationships in larger batches, potentially reducing runtime but consuming more memory.")
     model_name = st.sidebar.selectbox("Claude Model", [Opus, Sonnet, Haiku], index=2, help="The specific Claude model to use for generating the semantic sitemap, commentary, and Mermaid chart.")
@@ -692,5 +692,21 @@ def main():
                     st.graphviz_chart(mermaid_chart, use_container_width=True)
                 else:
                     st.error("Failed to generate Mermaid chart.")
+                # Create a zip file containing the CSV files
+
+                zip_file_name = f"{topic}_csv_files.zip"
+                with zipfile.ZipFile(zip_file_name, "w") as zip_file:
+                    zip_file.write(f"{topic}_entities.csv")
+                    zip_file.write(f"{topic}_relationships.csv")
+                    zip_file.write("graph_metrics.csv")
+                
+                # Provide a download button for the zipped file
+                with open(zip_file_name, "rb") as file:
+                    st.download_button(
+                        label="Download CSV Files (Zipped)",
+                        data=file,
+                        file_name=zip_file_name,
+                        mime="application/zip",
+    )
 
 main()
