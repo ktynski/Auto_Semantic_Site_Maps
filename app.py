@@ -227,7 +227,7 @@ class RelationshipGenerator:
             and the existing relationships:
             {existing_relationships}
             Your task is to identify relevant relationships between the given entities and the other entities in the context of the topic.
-            Use domain knowledge to prioritize important connections and provide meaningful edge labels. You must give each entity no less than 4 relationships and no more than 20 relationships for any individual entity. You must return all requested entity relationships.
+            Use domain knowledge to prioritize important connections and provide meaningful edge labels. You must give each entity no less than 2 relationships and no more than 10 relationships for any individual entity. You must return all requested entity relationships.
             Example output:
             source_id1,target_id1,edge_label1
             source_id2,target_id2,edge_label2
@@ -262,7 +262,7 @@ class RelationshipGenerator:
         new_relationships = set()
         entity_ids = list(entities.keys())
         batches = [entity_ids[i:i+batch_size] for i in range(0, len(entity_ids), batch_size)]
-        with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=num_parallel_runs) as executor:
             futures = []
             for batch_entity_ids in batches:
                 batch_entities = {id: entities[id] for id in batch_entity_ids}
@@ -289,7 +289,7 @@ class SemanticMapGenerator:
     
         for iteration in stqdm(range(num_iterations), desc="Generating Semantic Map"):
             # Parallel entity generation
-            with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=num_parallel_runs) as executor:
                 futures = []
                 for _ in range(num_parallel_runs):
                     future = executor.submit(self.entity_generator.generate_entities, topic, self.entities, num_entities_per_run, temperature)
@@ -419,7 +419,7 @@ def main():
 
                 for iteration in range(num_iterations):
                     # Parallel entity generation
-                    with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+                    with concurrent.futures.ThreadPoolExecutor(max_workers=num_parallel_runs) as executor:
                         futures = []
                         for _ in range(num_parallel_runs):
                             future = executor.submit(entity_generator.generate_entities, topic, semantic_map_generator.entities, num_entities_per_run, temperature)
