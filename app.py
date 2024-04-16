@@ -1,6 +1,9 @@
+Sure, here's the full updated code with improved commenting and the necessary changes to other functions:
+
+```python
 import streamlit as st
 import pandas as pd
-from langchain import PromptTemplate
+from langchain_core.prompts import PromptTemplate  # Importing PromptTemplate from langchain_core.prompts
 from langchain.chains import LLMChain
 from langchain_anthropic import ChatAnthropic
 import os
@@ -14,18 +17,14 @@ from streamlit import experimental_rerun
 import time
 import Levenshtein
 from stqdm import stqdm
-from multiprocessing import Pool, freeze_support
-from time import sleep
-from stqdm import stqdm
-import concurrent.futures
+import multiprocessing  # Importing multiprocessing directly
 
 # Define models
 Opus = "claude-3-opus-20240229"
 Sonnet = "claude-3-sonnet-20240229"
 Haiku = "claude-3-haiku-20240307"
 
-progress_bar = None
-
+# Template for the sitemap structure
 template = {
     "Pillars": [
         {
@@ -164,9 +163,23 @@ template = {
     ]
 }
 
-
-
+# Function to make LLM calls
 def make_llm_call(args):
+    """
+    Makes a call to the Anthropic LLM API with the provided arguments.
+
+    Args:
+        args (dict): A dictionary containing the following keys:
+            - api_key (str): The Anthropic API key for authentication.
+            - system_prompt (str): The system prompt for the LLM.
+            - prompt (str): The user prompt for the LLM.
+            - model_name (str): The name of the Claude model to use.
+            - max_tokens (int): The maximum number of tokens for the LLM response.
+            - temperature (float): The temperature value for the LLM response.
+
+    Returns:
+        str: The response from the LLM, or None if an exception occurred.
+    """
     try:
         response = anthropic.Anthropic(api_key=args["api_key"]).messages.create(
             system=args["system_prompt"],
@@ -181,14 +194,33 @@ def make_llm_call(args):
         print(f"Error making LLM call: {e}")
         return None
 
-
-
 class EntityGenerator:
+    """
+    A class for generating new entities related to a given topic.
+    """
     def __init__(self, llm):
+        """
+        Initializes the EntityGenerator instance.
+
+        Args:
+            llm (LLM): The LLM instance to use for generating entities.
+        """
         self.llm = llm
         self.entity_id_counter = 0
 
     def generate_entities(self, topic: str, existing_entities: Dict[str, str], num_new_entities: int, temperature: float) -> Dict[str, str]:
+        """
+        Generates new entities related to the given topic.
+
+        Args:
+            topic (str): The topic for which to generate entities.
+            existing_entities (Dict[str, str]): A dictionary of existing entities, where keys are entity IDs and values are entity labels.
+            num_new_entities (int): The number of new entities to generate.
+            temperature (float): The temperature value for the LLM response.
+
+        Returns:
+            Dict[str, str]: A dictionary of new entities, where keys are entity IDs and values are entity labels.
+        """
         prompt = PromptTemplate(
             input_variables=["topic", "existing_entities", "num_new_entities"],
             template="""Given the topic '{topic}' and the existing entities:\n\n{existing_entities}\n\n
@@ -214,10 +246,31 @@ class EntityGenerator:
         return new_entities
 
 class RelationshipGenerator:
+    """
+    A class for generating relationships between entities.
+    """
     def __init__(self, llm):
+        """
+        Initializes the RelationshipGenerator instance.
+
+        Args:
+            llm (LLM): The LLM instance to use for generating relationships.
+        """
         self.llm = llm
 
     def generate_batch_relationships(self, topic: str, batch_entities: Dict[str, str], other_entities: Dict[str, str], existing_relationships: Set[tuple]) -> Set[tuple]:
+        """
+        Generates relationships between a batch of entities and other entities.
+
+        Args:
+            topic (str): The topic for which to generate relationships.
+            batch_entities (Dict[str, str]): A dictionary of entities in the current batch, where keys are entity IDs and values are entity labels.
+            other_entities (Dict[str, str]): A dictionary of other entities, where keys are entity IDs and values are entity labels.
+            existing_relationships (Set[tuple]): A set of existing relationships, where each tuple represents a relationship (source_id, target_id, edge_label).
+
+        Returns:
+            Set[tuple]: A set of new relationships, where each tuple represents a relationship (source_id, target_id, edge_label).
+        """
         prompt = PromptTemplate(
             input_variables=["topic", "batch_entities", "other_entities", "existing_relationships"],
             template="""Given the topic '{topic}' and the following entities:
@@ -259,6 +312,19 @@ class RelationshipGenerator:
         return new_relationships
 
     def generate_relationships(self, topic: str, entities: Dict[str, str], existing_relationships: Set[tuple], batch_size: int, num_parallel_runs: int) -> Set[tuple]:
+        """
+        Generates relationships between entities in parallel.
+
+        Args:
+            topic (str): The topic for which to generate relationships.
+            entities (Dict[str, str]): A dictionary of entities, where keys are entity IDs and values are entity labels.
+            existing_relationships (Set[tuple]): A set of existing relationships, where each tuple represents a relationship (source_id, target_id, edge_label).
+            batch_size (int): The size of the batches for parallel processing.
+            num_parallel_runs (int): The number of parallel runs to perform.
+
+        Returns:
+            Set[tuple]: A set of new relationships, where each tuple represents a relationship (source_id, target_id, edge_label).
+        """
         new_relationships = set()
         entity_ids = list(entities.keys())
         batches = [entity_ids[i:i+batch_size] for i in range(0, len(entity_ids), batch_size)]
@@ -275,18 +341,42 @@ class RelationshipGenerator:
         return new_relationships
 
 class SemanticMapGenerator:
+    """
+    A class for generating a semantic map based on entities and relationships.
+    """
     def __init__(self, entity_generator: EntityGenerator, relationship_generator: RelationshipGenerator):
+        """
+        Initializes the SemanticMapGenerator instance.
+
+        Args:
+            entity_generator (EntityGenerator): The EntityGenerator instance to use for generating entities.
+            relationship_generator (RelationshipGenerator): The RelationshipGenerator instance to use for generating relationships.
+        """
         self.entity_generator = entity_generator
         self.relationship_generator = relationship_generator
         self.entities = {}
         self.relationships = set()
 
     def generate_semantic_map(self, topic: str, num_iterations: int, num_parallel_runs: int, num_entities_per_run: int, temperature: float, relationship_batch_size: int) -> Dict[str, Set]:
+        """
+        Generates a semantic map for the given topic.
+
+        Args:
+            topic (str): The topic for which to generate the semantic map.
+            num_iterations (int): The number of iterations to perform for generating entities and relationships.
+            num_parallel_runs (int): Thenumber of parallel runs to perform for entity and relationship generation.
+            num_entities_per_run (int): The number of new entities to generate in each run.
+            temperature (float): The temperature value for the LLM response.
+            relationship_batch_size (int): The size of the batches for parallel relationship generation.
+
+        Returns:
+            Dict[str, Set]: A dictionary containing the generated entities and relationships, where the keys are 'entities' and 'relationships', and the values are sets of entities and relationships, respectively.
+        """
         entities_count = 0
         relationships_count = 0
         entities_placeholder = st.empty()
         relationships_placeholder = st.empty()
-    
+
         for iteration in stqdm(range(num_iterations), desc="Generating Semantic Map"):
             # Parallel entity generation
             with concurrent.futures.ThreadPoolExecutor(max_workers=num_parallel_runs) as executor:
@@ -294,7 +384,7 @@ class SemanticMapGenerator:
                 for _ in range(num_parallel_runs):
                     future = executor.submit(self.entity_generator.generate_entities, topic, self.entities, num_entities_per_run, temperature)
                     futures.append(future)
-    
+
                 progress = stqdm(total=num_parallel_runs, desc="Generating Entities", leave=False)
                 progress.update(1)
                 new_entities = {}
@@ -304,28 +394,36 @@ class SemanticMapGenerator:
                     progress.update(1)
                     time.sleep(0.1)  # Simulate progress
                 progress.close()
+
             # Deduplicate entities
             self.entities.update(new_entities)
             entities_count += len(new_entities)
-    
+
             # Parallel relationship generation
             new_relationships = self.relationship_generator.generate_relationships(topic, self.entities, self.relationships, relationship_batch_size, num_parallel_runs)
             self.relationships.update(new_relationships)
             relationships_count += len(new_relationships)
-    
+
             # Simulate intermediate progress for relationship generation
             for _ in range(num_parallel_runs):
                 progress = (iteration * num_parallel_runs + _ + 1) / (num_iterations * num_parallel_runs)
                 progress_bar.progress(progress)
                 time.sleep(0.1)
-    
+
             # Update metrics
             entities_placeholder.metric("Total Entities", entities_count)
             relationships_placeholder.metric("Total Relationships", relationships_count)
-    
+
         return {"entities": self.entities, "relationships": self.relationships}
 
 def save_semantic_map_to_csv(semantic_map: Dict[str, Set], topic: str):
+    """
+    Saves the generated semantic map to CSV files.
+
+    Args:
+        semantic_map (Dict[str, Set]): A dictionary containing the generated entities and relationships.
+        topic (str): The topic for which the semantic map was generated.
+    """
     entities_file = f"{topic}_entities.csv"
     with open(entities_file, "w") as f:
         f.write("Id,Label\n")
@@ -342,8 +440,17 @@ def save_semantic_map_to_csv(semantic_map: Dict[str, Set], topic: str):
             f.write(f"{relationship[0]},{relationship[1]},{relationship[2]}\n")
             time.sleep(0.01)  # Simulate progress
 
-
 def merge_similar_nodes(G, similarity_threshold=0.8):
+    """
+    Merges similar nodes in the graph based on their label similarity.
+
+    Args:
+        G (NetworkX graph): The graph to merge similar nodes in.
+        similarity_threshold (float, optional): The threshold for label similarity. Defaults to 0.8.
+
+    Returns:
+        NetworkX graph: The graph with similar nodes merged.
+    """
     merged_nodes = set()
     for node1 in G.nodes():
         if node1 not in merged_nodes:
@@ -359,14 +466,15 @@ def merge_similar_nodes(G, similarity_threshold=0.8):
                         break
     return G
 
-
 # Streamlit app
 def main():
+    """
+    The main function that runs the Streamlit app.
+    """
     st.set_page_config(page_title="Generating Semantically Complete Sitemaps with Large Language Models and Graph Analysis", layout="wide")
     st.title("Semantically Complete SiteMaps with LLMs and Graph Analysis")
     description = """
     ## What is this and how does it work?
-
         This Agenti AI tool leverages multiple advanced techniques to generate highly sophisticated, extremely comprehensive, SEO-optimized semantic sitemaps:
         
         - 🌐 **Graph analysis metrics** (PageRank, betweenness centrality) to identify crucial nodes
@@ -387,6 +495,7 @@ def main():
         - 📈 **Enhances search rankings** through semantically coherent content organization
         - 🧠 **Leverages advanced data-driven techniques** that are hard to replicate through human analysis  """
     st.markdown(description)
+
     # Sidebar
     st.sidebar.title("Settings")
     topic = st.sidebar.text_input("Topic", value="Enter Your Topic Here", help="The main topic or theme for which the semantic sitemap will be generated.")
@@ -397,10 +506,12 @@ def main():
     temperature = st.sidebar.slider("Temperature", min_value=0.0, max_value=1.0, value=0.5, step=0.1, help="Controls the randomness and creativity of the generated entities and relationships. Lower values produce more focused results, while higher values introduce more diversity.")
     relationship_batch_size = st.sidebar.number_input("Relationship Batch Size", min_value=1, max_value=20, value=10, help="The batch size for generating relationships between entities. Higher values process relationships in larger batches, potentially reducing runtime but consuming more memory.")
     model_name = st.sidebar.selectbox("Claude Model", [Opus, Sonnet, Haiku], index=2, help="The specific Claude model to use for generating the semantic sitemap, commentary, and Mermaid chart.")
+
     # Initialize LLM
     llm = ChatAnthropic(temperature=0.2, model_name=model_name, max_tokens=4000, api_key=ANTHROPIC_API_KEY)
     global progress_bar
     progress_bar = st.progress(0)
+
     if st.sidebar.button("Generate Semantic Map"):
         if not ANTHROPIC_API_KEY:
             st.error("Please enter a valid Anthropic API key.")
@@ -411,6 +522,7 @@ def main():
             entity_generator = EntityGenerator(llm)
             relationship_generator = RelationshipGenerator(llm)
             semantic_map_generator = SemanticMapGenerator(entity_generator, relationship_generator)
+
             with st.spinner("Generating semantic map..."):
                 entities_placeholder = st.empty()
                 relationships_placeholder = st.empty()
@@ -443,137 +555,151 @@ def main():
 
             status_text.text("Semantic map generated.")
 
-        # Save semantic map to CSV
-        save_semantic_map_to_csv({"entities": semantic_map_generator.entities, "relationships": semantic_map_generator.relationships}, topic)
-        progress_bar.progress(0.4)
-        status_text.text("Semantic map saved to CSV.")
-        # Load the CSV files into DataFrames
-        nodes_df = pd.read_csv(f"{topic}_entities.csv")
-        edges_df = pd.read_csv(f"{topic}_relationships.csv")
-        # Create a directed graph using NetworkX
-        G = nx.DiGraph()
+            # Save semantic map to CSV
+            save_semantic_map_to_csv({"entities": semantic_map_generator.entities, "relationships": semantic_map_generator.relationships}, topic)
+            progress_bar.progress(0.4)
+            status_text.text("Semantic map saved to CSV.")
 
-        # Add nodes to the graph
-        for _, row in nodes_df.iterrows():
-            G.add_node(row['Id'], label=row['Label'])
+            # Load the CSV files into DataFrames
+            nodes_df = pd.read_csv(f"{topic}_entities.csv")
+            edges_df = pd.read_csv(f"{topic}_relationships.csv")
 
-        # Add edges to the graph
-        for _, row in edges_df.iterrows():
-            G.add_edge(row['Source'], row['Target'], label=row['Type'])
+            # Create a directed graph using NetworkX
+            G = nx.DiGraph()
 
-        # Merge similar nodes
-        G = merge_similar_nodes(G, similarity_threshold=0.8)
+            # Add nodes to the graph
+            for _, row in nodes_df.iterrows():
+                G.add_node(row['Id'], label=row['Label'])
 
-        with st.spinner("Calculating graph metrics..."):
-            progress = stqdm(total=4, desc="Calculating Graph Metrics")
-        
-            pagerank = nx.pagerank(G)
-            progress.update(1)
-            time.sleep(0.1)  # Simulate progress
-        
-            betweenness_centrality = nx.betweenness_centrality(G)
-            progress.update(1)
-            time.sleep(0.1)  # Simulate progress
-        
-            closeness_centrality = nx.closeness_centrality(G)
-            progress.update(1)
-            time.sleep(0.1)  # Simulate progress
-        
-            eigenvector_centrality = nx.eigenvector_centrality_numpy(G)
-            progress.update(1)
-            time.sleep(0.1)  # Simulate progress
-        
-            progress.close()
-            status_text.text("Graph metrics calculated.")
-        # Perform community detection using Louvain algorithm
-        undirected_G = G.to_undirected()
-        partition = community_louvain.best_partition(undirected_G)
-        # Calculate personalized PageRank for each pillar topic
-        personalized_pagerank = {}
-        for node in G.nodes():
-            if G.nodes[node]['label'].startswith('Pillar:'):
-                personalized_pagerank[node] = nx.pagerank(G, personalization={node: 1})
-        # Create a DataFrame to store the results
-        results_df = pd.DataFrame(columns=['Node', 'Label', 'PageRank', 'Betweenness Centrality', 'Closeness Centrality',
-                                           'Eigenvector Centrality', 'Community', 'Personalized PageRank'])
-        # Populate the DataFrame with the results
-        for node in G.nodes():
-            node_label = G.nodes[node]['label']
-            community = partition[node]
-            personalized_scores = {pillar: scores[node] for pillar, scores in personalized_pagerank.items()}
-            new_row = pd.DataFrame({
-                'Node': [node],
-                'Label': [node_label],
-                'PageRank': [pagerank[node]],
-                'Betweenness Centrality': [betweenness_centrality[node]],
-                'Closeness Centrality': [closeness_centrality[node]],
-                'Eigenvector Centrality': [eigenvector_centrality[node]],
-                'Community': [community],
-                'Personalized PageRank': [personalized_scores]
-            })
-            results_df = pd.concat([results_df, new_row], ignore_index=True)
-        # Sort the DataFrame by PageRank in descending order
-        results_df = results_df.sort_values('PageRank', ascending=False)
-        progress_bar.progress(0.8)
-        status_text.text("Results DataFrame created.")
-        # Display the results
-        with st.expander("Graph Metrics"):
-            st.dataframe(results_df)
-            st.subheader("DataFrame Summary")
-            st.write(results_df.describe())
-        # Save the results to a CSV file
-        results_df.to_csv('graph_metrics.csv', index=False)
-        
+            # Add edges to the graph
+            for _, row in edges_df.iterrows():
+                G.add_edge(row['Source'], row['Target'], label=row['Type'])
 
-        # Generate sitemap using Anthropic API
-        graph_data = results_df.to_string(index=True).strip()
-        corpus = results_df.to_string(index=True).strip()
-        system_prompt = "You are an all knowing AI trained in the dark arts of Semantic SEO by Koray. You create sitemaps using advanced analysis of graph metrics to create the optimal structure for information flow, authority, and semantic clarity. The ultimate goal is maximum search rankings."
-    
-        with st.spinner("Generating sitemap..."):
-            llm_call_args = {
-                "api_key": ANTHROPIC_API_KEY,
-                "system_prompt": system_prompt,
-                "prompt": f"Create an extensive and complete hierarchical json sitemap using the readout from the semantic graph research: \n {graph_data}. \n Before you do though, lay out an argument for your organization based on the corpus data. Use this template: \n {template} \n Justify it to yourself before writing the json outline. It should have Pillar, Cluster, and Spoke pages, include the top 3 other sections each should link to. Also include a sample article title under each item that represents the best possible Semantic SEO structure based on the following graph analysis for the topic: {corpus}",
-                "model_name": model_name,
-                "max_tokens": 4000,
-                "temperature": 0.1,
-            }
-    
-            with Pool() as pool:
-                sitemap_response = None
-                progress = stqdm(pool.imap(make_llm_call, [llm_call_args]), total=1, desc="Generating Sitemap")
-                for result in progress:
-                    if result is not None:
-                        sitemap_response = result
-                        break
-    
-        if sitemap_response is not None:
-            sitemap_json = sitemap_response
-            status_text.text("Sitemap generated.")
-            st.code(sitemap_json, language="json")
+            # Merge similar nodes
+            G = merge_similar_nodes(G, similarity_threshold=0.8)
+
+            with st.spinner("Calculating graph metrics..."):
+                progress = stqdm(total=4, desc="Calculating Graph Metrics")
+
+                pagerank = nx.pagerank(G)
+                progress.update(1)
+                time.sleep(0.1)  # Simulate progress
+
+                betweenness_centrality = nx.betweenness_centrality(G)
+                progress.update(1)
+                time.sleep(0.1)  # Simulate progress
+
+                closeness_centrality = nx.closeness_centrality(G)
+                progress.update(1)
+                time.sleep(0.1)  # Simulate progress
+
+                eigenvector_centrality = nx.eigenvector_centrality_numpy(G)
+                progress.update(1)
+                time.sleep(0.1)  # Simulate progress
+
+                progress.close()
+                status_text.text("Graph metrics calculated.")
+
+            # Perform community detection using Louvain algorithm
+            undirected_G = G.to_undirected()
+            partition = community_louvain.best_partition(undirected_G)
+
+            # Calculate personalized PageRank for each pillar topic
+            personalized_pagerank = {}
+            for node in G.nodes():
+                if G.nodes[node]['label'].startswith('Pillar:'):
+                    personalized_pagerank[node] = nx.pagerank(G, personalization={node: 1})
+
+            # Create a DataFrame to store the results
+            results_df = pd.DataFrame(columns=['Node', 'Label', 'PageRank', 'Betweenness Centrality', 'Closeness Centrality',
+                                               'Eigenvector Centrality', 'Community', 'Personalized PageRank'])
+
+            # Populate the DataFrame with the results
+            for node in G.nodes():
+                node_label = G.nodes[node]['label']
+                community = partition[node]
+                personalized_scores = {pillar: scores[node] for pillar, scores in personalized_pagerank.items()}
+                new_row = pd.DataFrame({
+                    'Node': [node],
+                    'Label': [node_label],
+                    'PageRank': [pagerank[node]],
+                    'Betweenness Centrality': [betweenness_centrality[node]],
+                    'Closeness Centrality': [closeness_centrality[node]],
+                    'Eigenvector Centrality': [eigenvector_centrality[node]],
+                    'Community': [community],
+                    'Personalized PageRank': [personalized_scores]
+                })
+                results_df = pd.concat([results_df, new_row], ignore_index=True)
+
+            # Sort the DataFrame by PageRank in descending order
+            results_df = results_df.sort_values('PageRank', ascending=False)
+            progress_bar.progress(0.8)
+            status_text.text("Results DataFrame created.")
+
+            # Display the results
+            with st.expander("Graph Metrics"):
+                st.dataframe(results_df)
+                st.subheader("DataFrame Summary")
+                st.write(results_df.describe())
+
+            # Save the results to a CSV file
+            results_df.to_csv('graph_metrics.csv', index=False)
+
+            # Generate sitemap using Anthropic API
+            graph_data = results_df.to_string(index=True).strip()
+            corpus = results_df.to_string(index=True).strip()
+            system_prompt = "You are an all knowing AI trained in the dark arts of Semantic SEO by Koray. You create sitemaps using advanced analysis of graph metrics to create the optimal structure for information flow, authority, and semantic clarity. The ultimate goal is maximum search rankings."
+
+            with st.spinner("Generating sitemap..."):
+                llm_call_args = {
+                    "api_key": ANTHROPIC_API_KEY,
+                    "system_prompt": system_prompt,
+                    "prompt": f"Create an extensive and complete hierarchical json sitemap using the readout from the semantic graph research: \n {graph_data}. \n Before you do though, lay out an argument for your organization based on the corpus data. Use this template: \n {template} \n Justify it to yourself before writing the json outline. It should have Pillar, Cluster, and Spoke pages, include the top 3 other sections each should link to. Also include a sample article title under each item that represents the best possible Semantic SEO structure based on the following graph analysis for the topic: {corpus}",
+                    "model_name": model_name,
+                    "max_tokens": 4000,
+                    "temperature": 0.1,
+                }
+
+                with multiprocessing.Pool() as pool:
+                    sitemap_response = None
+                    progress = stqdm(pool.imap(make_llm_call, [llm_call_args]), total=1, desc="Generating Sitemap")
+                    for result in progress:
+                        if result is not None:
+                            sitemap_response = result
+                            break
+
+            if sitemap_response is not None:
+                sitemap_json = sitemap_response
+                status_text.text("Sitemap generated.")
+                st.code(sitemap_json, language="json")
+            else:
+                st.error("Failed to generate sitemap.")
+
             # Generate additional commentary and recommendations using Anthropic API
             with st.spinner("Generating additional commentary and recommendations..."):
                 llm_call_args = {
+                    "api_key": ANTHROPIC_API_KEY,
+                    "system_prompt": system_prompt,
                     "prompt": f"Based on the generated semantic sitemap and graph analysis, provide a few paragraphs of additional commentary and concrete recommendations that are highly specific for the given topic and provided sitemap for optimizing the website structure and content for semantic SEO. Consider factors such as internal linking anchortext, content depth and breadth, and user experience. Here is the graph you generated: {sitemap_json} and the underlying graph data research: {graph_data}",
+                    "model_name": model_name,
                     "max_tokens": 1000,
                     "temperature": 0.2,
                 }
-            
-                with Pool() as pool:
+
+                with multiprocessing.Pool() as pool:
                     commentary_response = None
                     progress = stqdm(pool.imap(make_llm_call, [llm_call_args]), total=1, desc="Generating Commentary")
                     for result in progress:
                         if result is not None:
                             commentary_response = result
                             break
-            
+
                 if commentary_response is not None:
                     commentary = commentary_response
                     st.markdown(commentary)
                 else:
                     st.error("Failed to generate commentary and recommendations.")
-            
+
             # Generate Mermaid chart using Anthropic API
             with st.spinner("Generating Mermaid chart..."):
                 mermaid_prompt = f"""
@@ -592,30 +718,29 @@ def main():
                     }}
                     
                     DO NOT return any commentary, preamble, postamble, or meta commentary on the task or its completion. Return ONLY the digraph. Your response should start with digraph and then a bracket."""
-            
+
                 llm_call_args = {
+                    "api_key": ANTHROPIC_API_KEY,
+                    "system_prompt": system_prompt,
                     "prompt": mermaid_prompt,
+                    "model_name": model_name,
                     "max_tokens": 4000,
                     "temperature": 0.1,
                 }
-            
-                with Pool() as pool:
+
+                with multiprocessing.Pool() as pool:
                     mermaid_response = None
                     progress = stqdm(pool.imap(make_llm_call, [llm_call_args]), total=1, desc="Generating Mermaid Chart")
                     for result in progress:
                         if result is not None:
                             mermaid_response = result
                             break
-            
+
                 if mermaid_response is not None:
                     mermaid_chart = mermaid_response
                     st.markdown("## Site Map Visualization")
                     st.graphviz_chart(mermaid_chart, use_container_width=True)
                 else:
                     st.error("Failed to generate Mermaid chart.")
-        else:
-            st.error("Failed to generate sitemap.")
 
-
-if __name__ == "__main__":
-    main()
+main()
