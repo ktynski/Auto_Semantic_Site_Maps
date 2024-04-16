@@ -11,6 +11,6 @@ stqdm
 spacy
 nltk
 scikit-learn
-
+spacy-entity-linker
 
 
