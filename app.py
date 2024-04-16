@@ -491,7 +491,7 @@ def main():
     num_parallel_runs = st.sidebar.number_input("Number of Parallel Runs", min_value=1, max_value=20, value=5, help="The number of parallel runs for entity and relationship generation. Higher values can speed up the process but utilize more system resources.")
     num_entities_per_run = st.sidebar.number_input("Number of Entities per Run", min_value=1, max_value=20, value=10, help="The number of new entities to generate in each run. Higher values generate more entities per run, resulting in a more detailed semantic map but increasing runtime.")
     temperature = st.sidebar.slider("Temperature", min_value=0.0, max_value=1.0, value=0.5, step=0.1, help="Controls the randomness and creativity of the generated entities and relationships. Lower values produce more focused results, while higher values introduce more diversity.")
-    relationship_batch_size = st.sidebar.number_input("Relationship Batch Size", min_value=20, max_value=100, value=10, help="The batch size for generating relationships between entities. Higher values process relationships in larger batches, potentially reducing runtime but consuming more memory.")
+    relationship_batch_size = st.sidebar.number_input("Relationship Batch Size", min_value=20, max_value=100, value=40, help="The batch size for generating relationships between entities. Higher values process relationships in larger batches, potentially reducing runtime but consuming more memory.")
     model_name = st.sidebar.selectbox("Claude Model", [Opus, Sonnet, Haiku], index=2, help="The specific Claude model to use for generating the semantic sitemap, commentary, and Mermaid chart.")
     # Initialize LLM
     llm = ChatAnthropic(temperature=0.2, model_name=model_name, max_tokens=4000, api_key=ANTHROPIC_API_KEY)
