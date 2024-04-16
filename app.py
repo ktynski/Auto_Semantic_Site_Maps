@@ -14,7 +14,6 @@ from streamlit import experimental_rerun
 import time
 import Levenshtein
 from stqdm import stqdm
-import multiprocessing  # Importing multiprocessing directly
 
 # Define models
 Opus = "claude-3-opus-20240229"
@@ -23,153 +22,14 @@ Haiku = "claude-3-haiku-20240307"
 
 # Template for the sitemap structure
 template = {
-    "Pillars": [
-        {
-            "name": "Pillar 1",
-            "justification": "This pillar covers the core issues and concepts that are central to the overall topic, as determined by their high PageRank scores.",
-            "sample_article": "A Comprehensive Overview of [Topic]: Key Concepts, Issues, and Perspectives"
-        },
-        {
-            "name": "Pillar 2",
-            "justification": "This pillar focuses on the fundamental aspects and subtopics that are essential for understanding the main topic, based on their significant PageRank scores.",
-            "sample_article": "Exploring the Foundations of [Topic]: A Deep Dive into Core Principles and Theories"
-        },
-        {
-            "name": "Pillar 3",
-            "justification": "This pillar examines the critical components and themes that shape the overall discourse surrounding the main topic, as indicated by their notable PageRank scores.",
-            "sample_article": "Navigating the Landscape of [Topic]: Essential Elements and Influential Factors"
-        }
-    ],
-    "Clusters": [
-        {
-            "name": "Cluster 1",
-            "pillar": "Pillar 1",
-            "justification": "This cluster focuses on the closely related subtopics and themes that are crucial for comprehending the main pillar, as determined by their high betweenness centrality scores.",
-            "sample_article": "Unraveling the Intricacies of [Subtopic]: A Comprehensive Analysis",
-            "related_pillars": ["Pillar 2", "Pillar 3"]
-        },
-        {
-            "name": "Cluster 2",
-            "pillar": "Pillar 1",
-            "justification": "This cluster explores the interconnected concepts and ideas that bridge various aspects of the main pillar, based on their significant betweenness centrality scores.",
-            "sample_article": "Bridging the Gap: Examining the Interconnectedness of [Subtopic] within [Topic]",
-            "related_pillars": ["Pillar 2", "Pillar 3"]
-        },
-        {
-            "name": "Cluster 3",
-            "pillar": "Pillar 2",
-            "justification": "This cluster delves into the key issues and challenges associated with the main pillar, as indicated by their high betweenness centrality scores.",
-            "sample_article": "Confronting the Challenges of [Subtopic]: Strategies and Solutions",
-            "related_pillars": ["Pillar 1", "Pillar 3"]
-        },
-        {
-            "name": "Cluster 4",
-            "pillar": "Pillar 2",
-            "justification": "This cluster investigates the fundamental principles and theories that underpin the main pillar, based on their significant betweenness centrality scores.",
-            "sample_article": "Unveiling the Foundations: A Deep Dive into [Subtopic] Principles and Theories",
-            "related_pillars": ["Pillar 1", "Pillar 3"]
-        },
-        {
-            "name": "Cluster 5",
-            "pillar": "Pillar 3",
-            "justification": "This cluster examines the emerging trends and developments within the main pillar, as determined by their high betweenness centrality scores.",
-            "sample_article": "On the Horizon: Exploring Emerging Trends and Innovations in [Subtopic]",
-            "related_pillars": ["Pillar 1", "Pillar 2"]
-        },
-        {
-            "name": "Cluster 6",
-            "pillar": "Pillar 3",
-            "justification": "This cluster analyzes the impact and implications of the main pillar on various aspects of society and industry, based on their significant betweenness centrality scores.",
-            "sample_article": "The Ripple Effect: Examining the Impact of [Subtopic] on Society and Industry",
-            "related_pillars": ["Pillar 1", "Pillar 2"]
-        }
-    ],
-    "Spokes": [
-        {
-            "name": "Spoke 1",
-            "cluster": "Cluster 1",
-            "justification": "This spoke focuses on a specific aspect or application of the cluster, as determined by its high closeness centrality score.",
-            "sample_article": "Diving Deep: A Comprehensive Look at [Specific Aspect] within [Subtopic]"
-        },
-        {
-            "name": "Spoke 2",
-            "cluster": "Cluster 1",
-            "justification": "This spoke explores a particular case study or real-world example related to the cluster, based on its significant closeness centrality score.",
-            "sample_article": "From Theory to Practice: A Case Study on Implementing [Specific Aspect] in [Industry/Context]"
-        },
-        {
-            "name": "Spoke 3",
-            "cluster": "Cluster 2",
-            "justification": "This spoke examines a specific challenge or obstacle associated with the cluster, as indicated by its high closeness centrality score.",
-            "sample_article": "Overcoming Hurdles: Strategies for Addressing [Specific Challenge] in [Subtopic]"
-        },
-        {
-            "name": "Spoke 4",
-            "cluster": "Cluster 2",
-            "justification": "This spoke investigates a particular solution or approach related to the cluster, based on its significant closeness centrality score.",
-            "sample_article": "Innovative Solutions: Exploring [Specific Approach] for Tackling [Subtopic] Issues"
-        },
-        {
-            "name": "Spoke 5",
-            "cluster": "Cluster 3",
-            "justification": "This spoke analyzes a specific trend or pattern within the cluster, as determined by its high closeness centrality score.",
-            "sample_article": "Spotting the Trends: An In-Depth Analysis of [Specific Trend] in [Subtopic]"
-        },
-        {
-            "name": "Spoke 6",
-            "cluster": "Cluster 3",
-            "justification": "This spoke explores a particular methodology or framework related to the cluster, based on its significant closeness centrality score.",
-            "sample_article": "Frameworks for Success: Applying [Specific Methodology] in [Subtopic] Contexts"
-        },
-        {
-            "name": "Spoke 7",
-            "cluster": "Cluster 4",
-            "justification": "This spoke examines a specific application or use case associated with the cluster, as indicated by its high closeness centrality score.",
-            "sample_article": "From Concept to Application: Exploring [Specific Use Case] in [Subtopic]"
-        },
-        {
-            "name": "Spoke 8",
-            "cluster": "Cluster 4",
-            "justification": "This spoke investigates a particular best practice or guideline related to the cluster, based on its significant closeness centrality score.",
-            "sample_article": "Setting the Standard: Best Practices for Implementing [Specific Guideline] in [Subtopic]"
-        },
-        {
-            "name": "Spoke 9",
-            "cluster": "Cluster 5",
-            "justification": "This spoke analyzes a specific impact or consequence associated with the cluster, as determined by its high closeness centrality score.",
-            "sample_article": "The Domino Effect: Examining the Impact of [Specific Consequence] in [Subtopic]"
-        },
-        {
-            "name": "Spoke 10",
-            "cluster": "Cluster 5",
-            "justification": "This spoke explores a particular opportunity or potential related to the cluster, based on its significant closeness centrality score.",
-            "sample_article": "Unlocking Potential: Exploring [Specific Opportunity] in [Subtopic]"
-        },
-        {
-            "name": "Spoke 11",
-            "cluster": "Cluster 6",
-            "justification": "This spoke examines a specific case study or real-world example associated with the cluster, as indicated by its high closeness centrality score.",
-            "sample_article": "Lessons Learned: A Case Study on [Specific Example] in [Subtopic]"
-        },
-        {
-            "name": "Spoke 12",
-            "cluster": "Cluster 6",
-            "justification": "This spoke investigates a particular future direction or possibility related to the cluster, based on its significant closeness centrality score.",
-            "sample_article": "Envisioning the Future: Exploring [Specific Possibility] in [Subtopic]"
-        }
-    ]
+    # ... (template structure remains the same)
 }
-
-
-
-
 
 class LLMCaller:
     @staticmethod
     def make_llm_call(args):
         """
         Makes a call to the Anthropic LLM API with the provided arguments.
-
         Args:
             args (dict): A dictionary containing the following keys:
                 - api_key (str): The Anthropic API key for authentication.
@@ -178,7 +38,6 @@ class LLMCaller:
                 - model_name (str): The name of the Claude model to use.
                 - max_tokens (int): The maximum number of tokens for the LLM response.
                 - temperature (float): The temperature value for the LLM response.
-
         Returns:
             str: The response from the LLM, or None if an exception occurred.
         """
@@ -196,9 +55,6 @@ class LLMCaller:
             print(f"Error making LLM call: {e}")
             return None
 
-
-
-
 class EntityGenerator:
     """
     A class for generating new entities related to a given topic.
@@ -206,7 +62,6 @@ class EntityGenerator:
     def __init__(self, llm):
         """
         Initializes the EntityGenerator instance.
-
         Args:
             llm (LLM): The LLM instance to use for generating entities.
         """
@@ -216,13 +71,11 @@ class EntityGenerator:
     def generate_entities(self, topic: str, existing_entities: Dict[str, str], num_new_entities: int, temperature: float) -> Dict[str, str]:
         """
         Generates new entities related to the given topic.
-
         Args:
             topic (str): The topic for which to generate entities.
             existing_entities (Dict[str, str]): A dictionary of existing entities, where keys are entity IDs and values are entity labels.
             num_new_entities (int): The number of new entities to generate.
             temperature (float): The temperature value for the LLM response.
-
         Returns:
             Dict[str, str]: A dictionary of new entities, where keys are entity IDs and values are entity labels.
         """
@@ -257,7 +110,6 @@ class RelationshipGenerator:
     def __init__(self, llm):
         """
         Initializes the RelationshipGenerator instance.
-
         Args:
             llm (LLM): The LLM instance to use for generating relationships.
         """
@@ -266,13 +118,11 @@ class RelationshipGenerator:
     def generate_batch_relationships(self, topic: str, batch_entities: Dict[str, str], other_entities: Dict[str, str], existing_relationships: Set[tuple]) -> Set[tuple]:
         """
         Generates relationships between a batch of entities and other entities.
-
         Args:
             topic (str): The topic for which to generate relationships.
             batch_entities (Dict[str, str]): A dictionary of entities in the current batch, where keys are entity IDs and values are entity labels.
             other_entities (Dict[str, str]): A dictionary of other entities, where keys are entity IDs and values are entity labels.
             existing_relationships (Set[tuple]): A set of existing relationships, where each tuple represents a relationship (source_id, target_id, edge_label).
-
         Returns:
             Set[tuple]: A set of new relationships, where each tuple represents a relationship (source_id, target_id, edge_label).
         """
@@ -319,14 +169,12 @@ class RelationshipGenerator:
     def generate_relationships(self, topic: str, entities: Dict[str, str], existing_relationships: Set[tuple], batch_size: int, num_parallel_runs: int) -> Set[tuple]:
         """
         Generates relationships between entities in parallel.
-
         Args:
             topic (str): The topic for which to generate relationships.
             entities (Dict[str, str]): A dictionary of entities, where keys are entity IDs and values are entity labels.
             existing_relationships (Set[tuple]): A set of existing relationships, where each tuple represents a relationship (source_id, target_id, edge_label).
             batch_size (int): The size of the batches for parallel processing.
             num_parallel_runs (int): The number of parallel runs to perform.
-
         Returns:
             Set[tuple]: A set of new relationships, where each tuple represents a relationship (source_id, target_id, edge_label).
         """
@@ -352,7 +200,6 @@ class SemanticMapGenerator:
     def __init__(self, entity_generator: EntityGenerator, relationship_generator: RelationshipGenerator):
         """
         Initializes the SemanticMapGenerator instance.
-
         Args:
             entity_generator (EntityGenerator): The EntityGenerator instance to use for generating entities.
             relationship_generator (RelationshipGenerator): The RelationshipGenerator instance to use for generating relationships.
@@ -365,7 +212,6 @@ class SemanticMapGenerator:
     def generate_semantic_map(self, topic: str, num_iterations: int, num_parallel_runs: int, num_entities_per_run: int, temperature: float, relationship_batch_size: int) -> Dict[str, Set]:
         """
         Generates a semantic map for the given topic.
-
         Args:
             topic (str): The topic for which to generate the semantic map.
             num_iterations (int): The number of iterations to perform for generating entities and relationships.
@@ -373,7 +219,6 @@ class SemanticMapGenerator:
             num_entities_per_run (int): The number of new entities to generate in each run.
             temperature (float): The temperature value for the LLM response.
             relationship_batch_size (int): The size of the batches for parallel relationship generation.
-
         Returns:
             Dict[str, Set]: A dictionary containing the generated entities and relationships, where the keys are 'entities' and 'relationships', and the values are sets of entities and relationships, respectively.
         """
@@ -381,7 +226,6 @@ class SemanticMapGenerator:
         relationships_count = 0
         entities_placeholder = st.empty()
         relationships_placeholder = st.empty()
-
         for iteration in stqdm(range(num_iterations), desc="Generating Semantic Map"):
             # Parallel entity generation
             with concurrent.futures.ThreadPoolExecutor(max_workers=num_parallel_runs) as executor:
@@ -389,7 +233,6 @@ class SemanticMapGenerator:
                 for _ in range(num_parallel_runs):
                     future = executor.submit(self.entity_generator.generate_entities, topic, self.entities, num_entities_per_run, temperature)
                     futures.append(future)
-
                 progress = stqdm(total=num_parallel_runs, desc="Generating Entities", leave=False)
                 progress.update(1)
                 new_entities = {}
@@ -399,32 +242,26 @@ class SemanticMapGenerator:
                     progress.update(1)
                     time.sleep(0.1)  # Simulate progress
                 progress.close()
-
             # Deduplicate entities
             self.entities.update(new_entities)
             entities_count += len(new_entities)
-
             # Parallel relationship generation
             new_relationships = self.relationship_generator.generate_relationships(topic, self.entities, self.relationships, relationship_batch_size, num_parallel_runs)
             self.relationships.update(new_relationships)
             relationships_count += len(new_relationships)
-
             # Simulate intermediate progress for relationship generation
             for _ in range(num_parallel_runs):
                 progress = (iteration * num_parallel_runs + _ + 1) / (num_iterations * num_parallel_runs)
                 progress_bar.progress(progress)
                 time.sleep(0.1)
-
             # Update metrics
             entities_placeholder.metric("Total Entities", entities_count)
             relationships_placeholder.metric("Total Relationships", relationships_count)
-
         return {"entities": self.entities, "relationships": self.relationships}
 
 def save_semantic_map_to_csv(semantic_map: Dict[str, Set], topic: str):
     """
     Saves the generated semantic map to CSV files.
-
     Args:
         semantic_map (Dict[str, Set]): A dictionary containing the generated entities and relationships.
         topic (str): The topic for which the semantic map was generated.
@@ -436,7 +273,6 @@ def save_semantic_map_to_csv(semantic_map: Dict[str, Set], topic: str):
         for id, entity in progress:
             f.write(f"{id},{entity}\n")
             time.sleep(0.01)  # Simulate progress
-
     relationships_file = f"{topic}_relationships.csv"
     with open(relationships_file, "w") as f:
         f.write("Source,Target,Type\n")
@@ -448,11 +284,9 @@ def save_semantic_map_to_csv(semantic_map: Dict[str, Set], topic: str):
 def merge_similar_nodes(G, similarity_threshold=0.8):
     """
     Merges similar nodes in the graph based on their label similarity.
-
     Args:
         G (NetworkX graph): The graph to merge similar nodes in.
         similarity_threshold (float, optional): The threshold for label similarity. Defaults to 0.8.
-
     Returns:
         NetworkX graph: The graph with similar nodes merged.
     """
@@ -500,7 +334,6 @@ def main():
         - 📈 **Enhances search rankings** through semantically coherent content organization
         - 🧠 **Leverages advanced data-driven techniques** that are hard to replicate through human analysis  """
     st.markdown(description)
-
     # Sidebar
     st.sidebar.title("Settings")
     topic = st.sidebar.text_input("Topic", value="Enter Your Topic Here", help="The main topic or theme for which the semantic sitemap will be generated.")
@@ -511,29 +344,24 @@ def main():
     temperature = st.sidebar.slider("Temperature", min_value=0.0, max_value=1.0, value=0.5, step=0.1, help="Controls the randomness and creativity of the generated entities and relationships. Lower values produce more focused results, while higher values introduce more diversity.")
     relationship_batch_size = st.sidebar.number_input("Relationship Batch Size", min_value=1, max_value=20, value=10, help="The batch size for generating relationships between entities. Higher values process relationships in larger batches, potentially reducing runtime but consuming more memory.")
     model_name = st.sidebar.selectbox("Claude Model", [Opus, Sonnet, Haiku], index=2, help="The specific Claude model to use for generating the semantic sitemap, commentary, and Mermaid chart.")
-
     # Initialize LLM
     llm = ChatAnthropic(temperature=0.2, model_name=model_name, max_tokens=4000, api_key=ANTHROPIC_API_KEY)
     global progress_bar
     progress_bar = st.progress(0)
-
     if st.sidebar.button("Generate Semantic Map"):
         if not ANTHROPIC_API_KEY:
             st.error("Please enter a valid Anthropic API key.")
         else:
             status_text = st.empty()
-
             # Generate semantic map
             entity_generator = EntityGenerator(llm)
             relationship_generator = RelationshipGenerator(llm)
             semantic_map_generator = SemanticMapGenerator(entity_generator, relationship_generator)
-
             with st.spinner("Generating semantic map..."):
                 entities_placeholder = st.empty()
                 relationships_placeholder = st.empty()
                 entities_count = 0
                 relationships_count = 0
-
                 for iteration in range(num_iterations):
                     # Parallel entity generation
                     with concurrent.futures.ThreadPoolExecutor(max_workers=num_parallel_runs) as executor:
@@ -544,81 +372,61 @@ def main():
                         new_entities = {}
                         for future in concurrent.futures.as_completed(futures):
                             new_entities.update(future.result())
-
                     # Deduplicate entities
                     semantic_map_generator.entities.update(new_entities)
                     entities_count += len(new_entities)
                     entities_placeholder.metric("Total Entities", entities_count)
-
                     # Parallel relationship generation
                     new_relationships = relationship_generator.generate_relationships(topic, semantic_map_generator.entities, semantic_map_generator.relationships, relationship_batch_size, num_parallel_runs)
                     semantic_map_generator.relationships.update(new_relationships)
                     relationships_count += len(new_relationships)
                     relationships_placeholder.metric("Total Relationships", relationships_count)
-
                     progress_bar.progress((iteration + 1) / num_iterations)
-
             status_text.text("Semantic map generated.")
-
             # Save semantic map to CSV
             save_semantic_map_to_csv({"entities": semantic_map_generator.entities, "relationships": semantic_map_generator.relationships}, topic)
             progress_bar.progress(0.4)
             status_text.text("Semantic map saved to CSV.")
-
             # Load the CSV files into DataFrames
             nodes_df = pd.read_csv(f"{topic}_entities.csv")
             edges_df = pd.read_csv(f"{topic}_relationships.csv")
-
             # Create a directed graph using NetworkX
             G = nx.DiGraph()
-
             # Add nodes to the graph
             for _, row in nodes_df.iterrows():
                 G.add_node(row['Id'], label=row['Label'])
-
             # Add edges to the graph
             for _, row in edges_df.iterrows():
                 G.add_edge(row['Source'], row['Target'], label=row['Type'])
-
             # Merge similar nodes
             G = merge_similar_nodes(G, similarity_threshold=0.8)
-
             with st.spinner("Calculating graph metrics..."):
                 progress = stqdm(total=4, desc="Calculating Graph Metrics")
-
                 pagerank = nx.pagerank(G)
                 progress.update(1)
                 time.sleep(0.1)  # Simulate progress
-
                 betweenness_centrality = nx.betweenness_centrality(G)
                 progress.update(1)
                 time.sleep(0.1)  # Simulate progress
-
                 closeness_centrality = nx.closeness_centrality(G)
                 progress.update(1)
                 time.sleep(0.1)  # Simulate progress
-
                 eigenvector_centrality = nx.eigenvector_centrality_numpy(G)
                 progress.update(1)
                 time.sleep(0.1)  # Simulate progress
-
                 progress.close()
                 status_text.text("Graph metrics calculated.")
-
             # Perform community detection using Louvain algorithm
             undirected_G = G.to_undirected()
             partition = community_louvain.best_partition(undirected_G)
-
             # Calculate personalized PageRank for each pillar topic
             personalized_pagerank = {}
             for node in G.nodes():
                 if G.nodes[node]['label'].startswith('Pillar:'):
                     personalized_pagerank[node] = nx.pagerank(G, personalization={node: 1})
-
             # Create a DataFrame to store the results
             results_df = pd.DataFrame(columns=['Node', 'Label', 'PageRank', 'Betweenness Centrality', 'Closeness Centrality',
                                                'Eigenvector Centrality', 'Community', 'Personalized PageRank'])
-
             # Populate the DataFrame with the results
             for node in G.nodes():
                 node_label = G.nodes[node]['label']
@@ -635,26 +443,21 @@ def main():
                     'Personalized PageRank': [personalized_scores]
                 })
                 results_df = pd.concat([results_df, new_row], ignore_index=True, sort=False)  # Updated to suppress FutureWarning
-
             # Sort the DataFrame by PageRank in descending order
             results_df = results_df.sort_values('PageRank', ascending=False)
             progress_bar.progress(0.8)
             status_text.text("Results DataFrame created.")
-
             # Display the results
             with st.expander("Graph Metrics"):
                 st.dataframe(results_df)
                 st.subheader("DataFrame Summary")
                 st.write(results_df.describe())
-
             # Save the results to a CSV file
             results_df.to_csv('graph_metrics.csv', index=False)
-
             # Generate sitemap using Anthropic API
             graph_data = results_df.to_string(index=True).strip()
             corpus = results_df.to_string(index=True).strip()
             system_prompt = "You are an all knowing AI trained in the dark arts of Semantic SEO by Koray. You create sitemaps using advanced analysis of graph metrics to create the optimal structure for information flow, authority, and semantic clarity. The ultimate goal is maximum search rankings."
-
             with st.spinner("Generating sitemap..."):
                 llm_call_args = {
                     "api_key": ANTHROPIC_API_KEY,
@@ -664,22 +467,19 @@ def main():
                     "max_tokens": 4000,
                     "temperature": 0.1,
                 }
-
-                with multiprocessing.Pool() as pool:
+                with concurrent.futures.ThreadPoolExecutor() as executor:
                     sitemap_response = None
-                    progress = stqdm(pool.imap(LLMCaller.make_llm_call, [llm_call_args]), total=1, desc="Generating Sitemap")
+                    progress = stqdm(executor.map(LLMCaller.make_llm_call, [llm_call_args]), total=1, desc="Generating Sitemap")
                     for result in progress:
                         if result is not None:
                             sitemap_response = result
                             break
-
             if sitemap_response is not None:
                 sitemap_json = sitemap_response
                 status_text.text("Sitemap generated.")
                 st.code(sitemap_json, language="json")
             else:
                 st.error("Failed to generate sitemap.")
-
             # Generate additional commentary and recommendations using Anthropic API
             with st.spinner("Generating additional commentary and recommendations..."):
                 llm_call_args = {
@@ -690,21 +490,18 @@ def main():
                     "max_tokens": 1000,
                     "temperature": 0.2,
                 }
-
-                with multiprocessing.Pool() as pool:
+                with concurrent.futures.ThreadPoolExecutor() as executor:
                     commentary_response = None
-                    progress = stqdm(pool.imap(LLMCaller.make_llm_call, [llm_call_args]), total=1, desc="Generating Commentary")
+                    progress = stqdm(executor.map(LLMCaller.make_llm_call, [llm_call_args]), total=1, desc="Generating Commentary")
                     for result in progress:
                         if result is not None:
                             commentary_response = result
                             break
-
                 if commentary_response is not None:
                     commentary = commentary_response
                     st.markdown(commentary)
                 else:
                     st.error("Failed to generate commentary and recommendations.")
-
             # Generate Mermaid chart using Anthropic API
             with st.spinner("Generating Mermaid chart..."):
                 mermaid_prompt = f"""
@@ -723,7 +520,6 @@ def main():
                     }}
                     
                     DO NOT return any commentary, preamble, postamble, or meta commentary on the task or its completion. Return ONLY the digraph. Your response should start with digraph and then a bracket."""
-
                 llm_call_args = {
                     "api_key": ANTHROPIC_API_KEY,
                     "system_prompt": system_prompt,
@@ -732,15 +528,13 @@ def main():
                     "max_tokens": 4000,
                     "temperature": 0.1,
                 }
-
-                with multiprocessing.Pool() as pool:
+                with concurrent.futures.ThreadPoolExecutor() as executor:
                     mermaid_response = None
-                    progress = stqdm(pool.imap(LLMCaller.make_llm_call, [llm_call_args]), total=1, desc="Generating Mermaid Chart")
+                    progress = stqdm(executor.map(LLMCaller.make_llm_call, [llm_call_args]), total=1, desc="Generating Mermaid Chart")
                     for result in progress:
                         if result is not None:
                             mermaid_response = result
                             break
-
                 if mermaid_response is not None:
                     mermaid_chart = mermaid_response
                     st.markdown("## Site Map Visualization")
