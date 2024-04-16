@@ -34,9 +34,145 @@ Sonnet = "claude-3-sonnet-20240229"
 Haiku = "claude-3-haiku-20240307"
 
 # Template for the sitemap structure
+# Template for the sitemap structure
 template = {
-    # ... (template structure remains the same)
+    "Pillars": [
+        {
+            "name": "Pillar 1",
+            "justification": "This pillar covers the core issues and concepts that are central to the overall topic, as determined by their high PageRank scores.",
+            "sample_article": "A Comprehensive Overview of [Topic]: Key Concepts, Issues, and Perspectives"
+        },
+        {
+            "name": "Pillar 2",
+            "justification": "This pillar focuses on the fundamental aspects and subtopics that are essential for understanding the main topic, based on their significant PageRank scores.",
+            "sample_article": "Exploring the Foundations of [Topic]: A Deep Dive into Core Principles and Theories"
+        },
+        {
+            "name": "Pillar 3",
+            "justification": "This pillar examines the critical components and themes that shape the overall discourse surrounding the main topic, as indicated by their notable PageRank scores.",
+            "sample_article": "Navigating the Landscape of [Topic]: Essential Elements and Influential Factors"
+        }
+    ],
+    "Clusters": [
+        {
+            "name": "Cluster 1",
+            "pillar": "Pillar 1",
+            "justification": "This cluster focuses on the closely related subtopics and themes that are crucial for comprehending the main pillar, as determined by their high betweenness centrality scores.",
+            "sample_article": "Unraveling the Intricacies of [Subtopic]: A Comprehensive Analysis",
+            "related_pillars": ["Pillar 2", "Pillar 3"]
+        },
+        {
+            "name": "Cluster 2",
+            "pillar": "Pillar 1",
+            "justification": "This cluster explores the interconnected concepts and ideas that bridge various aspects of the main pillar, based on their significant betweenness centrality scores.",
+            "sample_article": "Bridging the Gap: Examining the Interconnectedness of [Subtopic] within [Topic]",
+            "related_pillars": ["Pillar 2", "Pillar 3"]
+        },
+        {
+            "name": "Cluster 3",
+            "pillar": "Pillar 2",
+            "justification": "This cluster delves into the key issues and challenges associated with the main pillar, as indicated by their high betweenness centrality scores.",
+            "sample_article": "Confronting the Challenges of [Subtopic]: Strategies and Solutions",
+            "related_pillars": ["Pillar 1", "Pillar 3"]
+        },
+        {
+            "name": "Cluster 4",
+            "pillar": "Pillar 2",
+            "justification": "This cluster investigates the fundamental principles and theories that underpin the main pillar, based on their significant betweenness centrality scores.",
+            "sample_article": "Unveiling the Foundations: A Deep Dive into [Subtopic] Principles and Theories",
+            "related_pillars": ["Pillar 1", "Pillar 3"]
+        },
+        {
+            "name": "Cluster 5",
+            "pillar": "Pillar 3",
+            "justification": "This cluster examines the emerging trends and developments within the main pillar, as determined by their high betweenness centrality scores.",
+            "sample_article": "On the Horizon: Exploring Emerging Trends and Innovations in [Subtopic]",
+            "related_pillars": ["Pillar 1", "Pillar 2"]
+        },
+        {
+            "name": "Cluster 6",
+            "pillar": "Pillar 3",
+            "justification": "This cluster analyzes the impact and implications of the main pillar on various aspects of society and industry, based on their significant betweenness centrality scores.",
+            "sample_article": "The Ripple Effect: Examining the Impact of [Subtopic] on Society and Industry",
+            "related_pillars": ["Pillar 1", "Pillar 2"]
+        }
+    ],
+    "Spokes": [
+        {
+            "name": "Spoke 1",
+            "cluster": "Cluster 1",
+            "justification": "This spoke focuses on a specific aspect or application of the cluster, as determined by its high closeness centrality score.",
+            "sample_article": "Diving Deep: A Comprehensive Look at [Specific Aspect] within [Subtopic]"
+        },
+        {
+            "name": "Spoke 2",
+            "cluster": "Cluster 1",
+            "justification": "This spoke explores a particular case study or real-world example related to the cluster, based on its significant closeness centrality score.",
+            "sample_article": "From Theory to Practice: A Case Study on Implementing [Specific Aspect] in [Industry/Context]"
+        },
+        {
+            "name": "Spoke 3",
+            "cluster": "Cluster 2",
+            "justification": "This spoke examines a specific challenge or obstacle associated with the cluster, as indicated by its high closeness centrality score.",
+            "sample_article": "Overcoming Hurdles: Strategies for Addressing [Specific Challenge] in [Subtopic]"
+        },
+        {
+            "name": "Spoke 4",
+            "cluster": "Cluster 2",
+            "justification": "This spoke investigates a particular solution or approach related to the cluster, based on its significant closeness centrality score.",
+            "sample_article": "Innovative Solutions: Exploring [Specific Approach] for Tackling [Subtopic] Issues"
+        },
+        {
+            "name": "Spoke 5",
+            "cluster": "Cluster 3",
+            "justification": "This spoke analyzes a specific trend or pattern within the cluster, as determined by its high closeness centrality score.",
+            "sample_article": "Spotting the Trends: An In-Depth Analysis of [Specific Trend] in [Subtopic]"
+        },
+        {
+            "name": "Spoke 6",
+            "cluster": "Cluster 3",
+            "justification": "This spoke explores a particular methodology or framework related to the cluster, based on its significant closeness centrality score.",
+            "sample_article": "Frameworks for Success: Applying [Specific Methodology] in [Subtopic] Contexts"
+        },
+        {
+            "name": "Spoke 7",
+            "cluster": "Cluster 4",
+            "justification": "This spoke examines a specific application or use case associated with the cluster, as indicated by its high closeness centrality score.",
+            "sample_article": "From Concept to Application: Exploring [Specific Use Case] in [Subtopic]"
+        },
+        {
+            "name": "Spoke 8",
+            "cluster": "Cluster 4",
+            "justification": "This spoke investigates a particular best practice or guideline related to the cluster, based on its significant closeness centrality score.",
+            "sample_article": "Setting the Standard: Best Practices for Implementing [Specific Guideline] in [Subtopic]"
+        },
+        {
+            "name": "Spoke 9",
+            "cluster": "Cluster 5",
+            "justification": "This spoke analyzes a specific impact or consequence associated with the cluster, as determined by its high closeness centrality score.",
+            "sample_article": "The Domino Effect: Examining the Impact of [Specific Consequence] in [Subtopic]"
+        },
+        {
+            "name": "Spoke 10",
+            "cluster": "Cluster 5",
+            "justification": "This spoke explores a particular opportunity or potential related to the cluster, based on its significant closeness centrality score.",
+            "sample_article": "Unlocking Potential: Exploring [Specific Opportunity] in [Subtopic]"
+        },
+        {
+            "name": "Spoke 11",
+            "cluster": "Cluster 6",
+            "justification": "This spoke examines a specific case study or real-world example associated with the cluster, as indicated by its high closeness centrality score.",
+            "sample_article": "Lessons Learned: A Case Study on [Specific Example] in [Subtopic]"
+        },
+        {
+            "name": "Spoke 12",
+            "cluster": "Cluster 6",
+            "justification": "This spoke investigates a particular future direction or possibility related to the cluster, based on its significant closeness centrality score.",
+            "sample_article": "Envisioning the Future: Exploring [Specific Possibility] in [Subtopic]"
+        }
+    ]
 }
+
 
 class LLMCaller:
     @staticmethod
