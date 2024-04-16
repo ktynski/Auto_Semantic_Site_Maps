@@ -10,7 +10,6 @@ tqdm
 stqdm
 spacy
 nltk
-nltk.download('punkt')
-nltk.download('stopwords')
+
 
 
