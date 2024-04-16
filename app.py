@@ -14,7 +14,10 @@ from streamlit import experimental_rerun
 import time
 import Levenshtein
 from stqdm import stqdm
-
+from multiprocessing import Pool, freeze_support
+from time import sleep
+from stqdm import stqdm
+import concurrent.futures
 
 # Define models
 Opus = "claude-3-opus-20240229"
@@ -160,6 +163,25 @@ template = {
         }
     ]
 }
+
+
+
+def make_llm_call(args):
+    try:
+        response = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY).messages.create(
+            system=system_prompt,
+            messages=[{"role": "user", "content": args["prompt"]}],
+            model=model_name,
+            max_tokens=args["max_tokens"],
+            temperature=args["temperature"],
+            stop_sequences=[],
+        )
+        return response.content[0].text
+    except Exception as e:
+        print(f"Error making LLM call: {e}")
+        return None
+
+
 
 class EntityGenerator:
     def __init__(self, llm):
@@ -505,57 +527,55 @@ def main():
 
         # Generate sitemap using Anthropic API
         graph_data = results_df.to_string(index=True).strip()
-        corpus = results_df.to_string(index=True).strip()
-        system_prompt = "You are an all knowing AI trained in the dark arts of Semantic SEO by Koray. You create sitemaps using advanced analysis of graph metrics to create the optimal structure for information flow, authority, and semantic clarity. The ultimate goal is maximum search rankings."
+            corpus = results_df.to_string(index=True).strip()
+            system_prompt = "You are an all knowing AI trained in the dark arts of Semantic SEO by Koray. You create sitemaps using advanced analysis of graph metrics to create the optimal structure for information flow, authority, and semantic clarity. The ultimate goal is maximum search rankings."
         
-        with st.spinner("Generating sitemap..."):
-            sitemap_response = None
-            progress = stqdm(total=100, desc="Generating Sitemap")
-            while sitemap_response is None:
-                try:
-                    sitemap_response = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY).messages.create(
-                        system=system_prompt,
-                        messages=[{"role": "user", "content": f"Create an extensive and complete hierarchical json sitemap using the readout from the semantic graph research: \n {graph_data}. \n Before you do though, lay out an argument for your organization based on the corpus data. Use this template: \n {template} \n Justify it to yourself before writing the json outline. It should have Pillar, Cluster, and Spoke pages, include the top 3 other sections each should link to. Also include a sample article title under each item that represents the best possible Semantic SEO structure based on the following graph analysis for the topic: {corpus}"}],
-                        model=model_name,
-                        max_tokens=4000,
-                        temperature=0.1,
-                        stop_sequences=[],
-                    )
-                except Exception as e:
-                    print(f"Error generating sitemap: {e}")
-                    time.sleep(1)  # Wait for a short time before retrying
-                
-                # Simulate progress
-                progress.update(10)
-                time.sleep(0.5)
+            with st.spinner("Generating sitemap..."):
+                llm_call_args = {
+                    "prompt": f"Create an extensive and complete hierarchical json sitemap using the readout from the semantic graph research: \n {graph_data}. \n Before you do though, lay out an argument for your organization based on the corpus data. Use this template: \n {template} \n Justify it to yourself before writing the json outline. It should have Pillar, Cluster, and Spoke pages, include the top 3 other sections each should link to. Also include a sample article title under each item that represents the best possible Semantic SEO structure based on the following graph analysis for the topic: {corpus}",
+                    "max_tokens": 4000,
+                    "temperature": 0.1,
+                }
         
-            progress.close()
+                with Pool() as pool:
+                    sitemap_response = None
+                    progress = stqdm(pool.imap(make_llm_call, [llm_call_args]), total=1, desc="Generating Sitemap")
+                    for result in progress:
+                        if result is not None:
+                            sitemap_response = result
+                            break
+        
+            if sitemap_response is not None:
+                sitemap_json = sitemap_response
+                status_text.text("Sitemap generated.")
+                st.code(sitemap_json, language="json")
+            else:
+                st.error("Failed to generate sitemap.")
         
         sitemap_json = sitemap_response.content[0].text
         status_text.text("Sitemap generated.")
         st.code(sitemap_json, language="json")
         # Generate additional commentary and recommendations using Anthropic API
         with st.spinner("Generating additional commentary and recommendations..."):
-            commentary_response = None
-            progress = stqdm(total=100, desc="Generating Commentary")
-            while commentary_response is None:
-                try:
-                    commentary_response = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY).messages.create(
-                        system=system_prompt,
-                        messages=[{"role": "user", "content": f"Based on the generated semantic sitemap and graph analysis, provide a few paragraphs of additional commentary and concrete recommendations that are highly specific for the given topic and provided sitemap for optimizing the website structure and content for semantic SEO. Consider factors such as internal linking anchortext, content depth and breadth, and user experience. Here is the graph you generated: {sitemap_json} and the underlying graph data research: {graph_data}"}],
-                        model=model_name,
-                        max_tokens=1000,
-                        temperature=0.2,
-                        stop_sequences=[],
-                    )
-                except Exception as e:
-                    print(f"Error generating commentary: {e}")
-                    time.sleep(1)  # Wait for a short time before retrying
-                
-                progress.update(10)
-                time.sleep(0.1)  # Simulate progress
+            llm_call_args = {
+                "prompt": f"Based on the generated semantic sitemap and graph analysis, provide a few paragraphs of additional commentary and concrete recommendations that are highly specific for the given topic and provided sitemap for optimizing the website structure and content for semantic SEO. Consider factors such as internal linking anchortext, content depth and breadth, and user experience. Here is the graph you generated: {sitemap_json} and the underlying graph data research: {graph_data}",
+                "max_tokens": 1000,
+                "temperature": 0.2,
+            }
         
-            progress.close()
+            with Pool() as pool:
+                commentary_response = None
+                progress = stqdm(pool.imap(make_llm_call, [llm_call_args]), total=1, desc="Generating Commentary")
+                for result in progress:
+                    if result is not None:
+                        commentary_response = result
+                        break
+        
+            if commentary_response is not None:
+                commentary = commentary_response
+                st.markdown(commentary)
+            else:
+                st.error("Failed to generate commentary and recommendations.")
         
         commentary = commentary_response.content[0].text
         st.markdown(commentary)
@@ -579,26 +599,26 @@ def main():
                 
                 DO NOT return any commentary, preamble, postamble, or meta commentary on the task or its completion. Return ONLY the digraph. Your response should start with digraph and then a bracket."""
         
-            mermaid_response = None
-            progress = stqdm(total=100, desc="Generating Mermaid Chart")
-            while mermaid_response is None:
-                try:
-                    mermaid_response = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY).messages.create(
-                        system="You are an AI that outputs digraph charts in a specific format without any other text, preamble, postamble or meta commentary. You do this accurately every time. Failing results in me losing my job.",
-                        messages=[{"role": "user", "content": f"{mermaid_prompt}"}],
-                        model=model_name,
-                        max_tokens=4000,
-                        temperature=0.1,
-                        stop_sequences=[],
-                    )
-                except Exception as e:
-                    print(f"Error generating Mermaid chart: {e}")
-                    time.sleep(1)  # Wait for a short time before retrying
+            llm_call_args = {
+                "prompt": mermaid_prompt,
+                "max_tokens": 4000,
+                "temperature": 0.1,
+            }
         
-                progress.update(10)
-                time.sleep(0.1)  # Simulate progress
+            with Pool() as pool:
+                mermaid_response = None
+                progress = stqdm(pool.imap(make_llm_call, [llm_call_args]), total=1, desc="Generating Mermaid Chart")
+                for result in progress:
+                    if result is not None:
+                        mermaid_response = result
+                        break
         
-            progress.close()
+            if mermaid_response is not None:
+                mermaid_chart = mermaid_response
+                st.markdown("## Site Map Visualization")
+                st.graphviz_chart(mermaid_chart, use_container_width=True)
+            else:
+                st.error("Failed to generate Mermaid chart.")
         
         mermaid_chart = mermaid_response.content[0].text
         print(mermaid_chart)
