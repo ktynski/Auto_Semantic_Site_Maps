@@ -8,4 +8,8 @@ scipy
 python-Levenshtein
 tqdm
 stqdm
+spacy
+nltk.download('punkt')
+nltk.download('stopwords')
+
 
