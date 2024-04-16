@@ -160,36 +160,39 @@ template = {
     ]
 }
 
-# Function to make LLM calls
-def make_llm_call(args):
-    """
-    Makes a call to the Anthropic LLM API with the provided arguments.
+import anthropic
 
-    Args:
-        args (dict): A dictionary containing the following keys:
-            - api_key (str): The Anthropic API key for authentication.
-            - system_prompt (str): The system prompt for the LLM.
-            - prompt (str): The user prompt for the LLM.
-            - model_name (str): The name of the Claude model to use.
-            - max_tokens (int): The maximum number of tokens for the LLM response.
-            - temperature (float): The temperature value for the LLM response.
+class LLMCaller:
+    @staticmethod
+    def make_llm_call(args):
+        """
+        Makes a call to the Anthropic LLM API with the provided arguments.
 
-    Returns:
-        str: The response from the LLM, or None if an exception occurred.
-    """
-    try:
-        response = anthropic.Anthropic(api_key=args["api_key"]).messages.create(
-            system=args["system_prompt"],
-            messages=[{"role": "user", "content": args["prompt"]}],
-            model=args["model_name"],
-            max_tokens=args["max_tokens"],
-            temperature=args["temperature"],
-            stop_sequences=[],
-        )
-        return response.content[0].text
-    except Exception as e:
-        print(f"Error making LLM call: {e}")
-        return None
+        Args:
+            args (dict): A dictionary containing the following keys:
+                - api_key (str): The Anthropic API key for authentication.
+                - system_prompt (str): The system prompt for the LLM.
+                - prompt (str): The user prompt for the LLM.
+                - model_name (str): The name of the Claude model to use.
+                - max_tokens (int): The maximum number of tokens for the LLM response.
+                - temperature (float): The temperature value for the LLM response.
+
+        Returns:
+            str: The response from the LLM, or None if an exception occurred.
+        """
+        try:
+            response = anthropic.Anthropic(api_key=args["api_key"]).messages.create(
+                system=args["system_prompt"],
+                messages=[{"role": "user", "content": args["prompt"]}],
+                model=args["model_name"],
+                max_tokens=args["max_tokens"],
+                temperature=args["temperature"],
+                stop_sequences=[],
+            )
+            return response.content[0].text
+        except Exception as e:
+            print(f"Error making LLM call: {e}")
+            return None
 
 class EntityGenerator:
     """
@@ -657,13 +660,13 @@ def main():
                     "temperature": 0.1,
                 }
 
-                with multiprocessing.Pool() as pool:
-                    sitemap_response = None
-                    progress = stqdm(pool.imap(make_llm_call, [llm_call_args]), total=1, desc="Generating Sitemap")
-                    for result in progress:
-                        if result is not None:
-                            sitemap_response = result
-                            break
+            with multiprocessing.Pool() as pool:
+                sitemap_response = None
+                progress = stqdm(pool.imap(LLMCaller.make_llm_call, [llm_call_args]), total=1, desc="Generating Sitemap")
+                for result in progress:
+                    if result is not None:
+                        sitemap_response = result
+                        break
 
             if sitemap_response is not None:
                 sitemap_json = sitemap_response
